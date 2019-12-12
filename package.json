@@ -1,0 +1,12 @@
+{
+  "name": "@scarf/scarf",
+  "version": "0.0.1",
+  "description": "Understand who is using your libraries and how they are used",
+  "main": "index.js",
+  "files": ["*.js"],
+  "scripts": {
+    "postinstall": "node ./report.js"
+  },
+  "author": "Scarf Systems",
+  "license": "MIT"
+}
