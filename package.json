@@ -1,9 +1,9 @@
 {
   "name": "@scarf/scarf",
   "version": "0.0.1",
-  "description": "Understand who is using your libraries and how they are used",
-  "main": "index.js",
-  "files": ["*.js"],
+  "description": "Understand who is using your libraries and how they are used. Scarf is like Google Analytics for your packages",
+  "main": "report.js",
+  "files": ["report.js"],
   "scripts": {
     "postinstall": "node ./report.js"
   },
