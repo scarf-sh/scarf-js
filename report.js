@@ -3,13 +3,19 @@ const os = require('os')
 const util = require('util')
 const fs = require('fs')
 const exec = require('child_process').exec
-const http = require('http')
+const https = require('https')
 const crypto = require('crypto')
 // if crypto isn't loaded in the node runtime, we'll skip
 const hash = crypto ? crypto.createHash('sha256') : null
 
 const scarfLibName = '@scarf/scarf'
-const scarfHost = 'https://scarf.sh'
+const scarfHost = 'scarf.sh'
+
+function logIfVerbose(toLog, stream) {
+  if (process.env.SCARF_VERBOSE === 'true') {
+    (stream || console.log)(toLog)
+  }
+}
 
 function getParentPackage(callback) {
   const moduleSeparated = path.resolve(__dirname).split('node_modules')
@@ -91,14 +97,14 @@ function reportPostInstall() {
       reqOptions.headers['Authorization'] = `Basic ${authToken}`
     }
 
-    const req = http.request(reqOptions, (res) => {
+    const req = https.request(reqOptions, (res) => {
       res.on('data', d => {
-        process.stdout.write(d)
+        logIfVerbose(d.toString())
       })
     });
 
     req.on('error', error => {
-      console.error(error)
+      logIfVerbose(error, console.error)
     })
 
     req.write(data)
@@ -152,6 +158,7 @@ if (require.main === module) {
   } catch (e) {
     // This is an optional, best effort attempt. If there are any errors in
     // Scarf, we must not interfere with whatever the user is doing
+    logIfVerbose(e, console.error)
   }
 }
 
