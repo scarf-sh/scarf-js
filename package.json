@@ -1,6 +1,6 @@
 {
   "name": "@scarf/scarf",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Understand who is using your libraries and how they are used. Scarf is like Google Analytics for your packages",
   "main": "report.js",
   "files": ["report.js"],

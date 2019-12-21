@@ -55,7 +55,7 @@ function getMac() {
 
 // To track distinct machines, we'll use a sha256 of the mac address rather than
 // the actual mac address
-function getMacShaSum() {
+function getMachineIdentifier() {
   if (!hash) {
     return null
   }
@@ -77,7 +77,7 @@ function reportPostInstall() {
       libraryType: 'npm',
       rawPlatform: os.platform(),
       rawArch: os.arch(),
-      mac: getMacShaSum(),
+      machineIdentifier: getMachineIdentifier(),
       dependencyInfo: json,
     }
     const data = JSON.stringify(infoPayload)
