@@ -1,6 +1,7 @@
 # scarf-js
 
-Like Google Analytics, but for your npm library. Scarf will report some [basic details](#provided-data) any time your library is installed with npm.
+Like Google Analytics, but for your npm library. Scarf will report some basic details any time your library is installed 
+with npm.
 
 ### Installing
 
@@ -16,7 +17,7 @@ collect stats on install, no additional code is required!
 
 Head to your package's dashboard on Scarf to see your reports when available.
 
-### [What information does Scarf provide?](#provided-data)
+### What information does Scarf provide?
 
 - OS and system info of your users
 - Company information of your users
