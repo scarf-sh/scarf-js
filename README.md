@@ -19,11 +19,18 @@ collect stats on install, no additional code is required!
 
 Head to your package's dashboard on Scarf to see your reports when available.
 
-### What information does Scarf provide?
+### What information does Scarf provide me as a package author?
 
 - Basic system information of your users
 - Company information of your users
 - Dependency tree information of packages that depend on your library
+
+### As a user of a package using Scarf, what information does Scarf send about me?
+
+- The operating system you are using
+- The version of the package you're installing that depends on Scarf
+- Your IP address will be used to look up any available company information. The
+  IP address itself will be subsequently deleted
 
 ### Future work
 

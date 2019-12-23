@@ -39,37 +39,6 @@ function getDependencyInfo(callback) {
   })
 }
 
-function getMac() {
-  const macRegex = /(?:[a-z0-9]{1,2}[:-]){5}[a-z0-9]{1,2}/i
-  const zeroRegex = /(?:[0]{1,2}[:-]){5}[0]{1,2}/
-  const ifaces = os.networkInterfaces()
-  for (const iface of Object.values(ifaces)) {
-    for (const part of iface) {
-      if (zeroRegex.test(part.mac) === false) {
-        return part.mac
-      }
-    }
-  }
-  return null
-}
-
-// To track distinct machines, we'll use a sha256 of the mac address rather than
-// the actual mac address
-function getMachineIdentifier() {
-  if (!hash) {
-    return null
-  }
-
-  const mac = getMac()
-
-  if (mac) {
-    hash.update(mac)
-    return hash.digest('hex')
-  }
-
-  return null
-}
-
 function reportPostInstall() {
   const scarfApiToken = process.env.SCARF_API_TOKEN
   getDependencyInfo(dependencyInfo => {
@@ -81,7 +50,6 @@ function reportPostInstall() {
       libraryType: 'npm',
       rawPlatform: os.platform(),
       rawArch: os.arch(),
-      machineIdentifier: getMachineIdentifier(),
       dependencyInfo: dependencyInfo,
     }
     const data = JSON.stringify(infoPayload)
