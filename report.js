@@ -59,7 +59,7 @@ function reportPostInstall() {
       method: 'POST',
       path: '/package-event/install',
       headers: {
-        'Content-Type': 'application/dependencyInfo',
+        'Content-Type': 'application/json',
         'Content-Length': data.length,
       }
     }
@@ -86,7 +86,7 @@ function reportPostInstall() {
   })
 }
 
-// Find a path to Scarf from the dependencyInfo output of npm ls @scarf/scarf --dependencyInfo in
+// Find a path to Scarf from the json output of npm ls @scarf/scarf --json in
 // the package that's directly including Scarf
 //
 // {
