@@ -17,7 +17,7 @@ function logIfVerbose(toLog, stream) {
   }
 }
 
-function getParentPackage(callback) {
+function getDependencyInfo(callback) {
   const moduleSeparated = path.resolve(__dirname).split('node_modules')
   const dependentPath = moduleSeparated.slice(0, moduleSeparated.length-1).join('node_modules')
 
@@ -72,13 +72,17 @@ function getMachineIdentifier() {
 
 function reportPostInstall() {
   const scarfApiToken = process.env.SCARF_API_TOKEN
-  getParentPackage(json => {
+  getDependencyInfo(dependencyInfo => {
+    if (!dependencyInfo.parent || !dependencyInfo.parent.name) {
+      return
+    }
+
     const infoPayload = {
       libraryType: 'npm',
       rawPlatform: os.platform(),
       rawArch: os.arch(),
       machineIdentifier: getMachineIdentifier(),
-      dependencyInfo: json,
+      dependencyInfo: dependencyInfo,
     }
     const data = JSON.stringify(infoPayload)
 
@@ -87,7 +91,7 @@ function reportPostInstall() {
       method: 'POST',
       path: '/package-event/install',
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/dependencyInfo',
         'Content-Length': data.length,
       }
     }
@@ -96,6 +100,8 @@ function reportPostInstall() {
       const authToken = new Buffer(`n/a:${scarfApiToken}`).toString('base64')
       reqOptions.headers['Authorization'] = `Basic ${authToken}`
     }
+
+    console.log(`The dependency '${dependencyInfo.parent.name}' is tracking installation statistics using Scarf (https://scarf.sh), which helps open-source developers fund their work. Scarf securely logs basic system information and dependency tree details when this package is installed. The Scarf npm library is entirely open source at https://github.com/scarf-sh/scarf-js. For more details about your project's dependencies, try running 'npm ls'.`)
 
     const req = https.request(reqOptions, (res) => {
       res.on('data', d => {
@@ -112,7 +118,7 @@ function reportPostInstall() {
   })
 }
 
-// Find a path to Scarf from the json output of npm ls @scarf/scarf --json in
+// Find a path to Scarf from the dependencyInfo output of npm ls @scarf/scarf --dependencyInfo in
 // the package that's directly including Scarf
 //
 // {
