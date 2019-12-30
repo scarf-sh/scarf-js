@@ -31,6 +31,16 @@ Head to your package's dashboard on Scarf to see your reports when available.
 - The version of the package you're installing that depends on Scarf
 - Your IP address will be used to look up any available company information. The
   IP address itself will be subsequently deleted
+  
+### As a user of a package using Scarf, how can I opt out of analytics?
+
+Scarf's analytics help support developers of the open source packages you are using, so 
+and leaving the anlytics enabled is appreciated. However, if you'd like to opt out,
+set this variable in your environment:
+
+```shell
+export SCARF_NO_ANALYTICS=1
+```
 
 ### Future work
 
