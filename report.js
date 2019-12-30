@@ -79,7 +79,7 @@ function reportPostInstall() {
     console.log(`Scarf securely logs basic system information and dependency tree details when this package is installed.`)
     console.log(`The Scarf npm library is open source and permissively licensed at https://github.com/scarf-sh/scarf-js.`)
     console.log(`For more details about your project's dependencies, try running 'npm ls'.`)
-    console.log(`To opt out of Scarf's analytics, set the environment variable 'SCARF_NO_ANALYTICS=1'.`)
+    console.log(`To opt out of analytics, set the environment variable 'SCARF_NO_ANALYTICS=1'.`)
     console.log(``)
 
     const req = https.request(reqOptions, (res) => {
