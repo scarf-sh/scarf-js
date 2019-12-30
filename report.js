@@ -40,6 +40,12 @@ function getDependencyInfo(callback) {
 }
 
 function reportPostInstall() {
+
+  const hasOptedOut = process.env.SCARF_NO_ANALYTICS === '1' || process.env.SCARF_NO_ANALYTICS === 'true'
+  if (hasOptedOut) {
+    return
+  }
+
   const scarfApiToken = process.env.SCARF_API_TOKEN
   getDependencyInfo(dependencyInfo => {
     if (!dependencyInfo.parent || !dependencyInfo.parent.name) {
@@ -69,7 +75,12 @@ function reportPostInstall() {
       reqOptions.headers['Authorization'] = `Basic ${authToken}`
     }
 
-    console.log(`The dependency '${dependencyInfo.parent.name}' is tracking installation statistics using Scarf (https://scarf.sh), which helps open-source developers fund their work. Scarf securely logs basic system information and dependency tree details when this package is installed. The Scarf npm library is entirely open source at https://github.com/scarf-sh/scarf-js. For more details about your project's dependencies, try running 'npm ls'.`)
+    console.log(`The dependency '${dependencyInfo.parent.name}' is tracking installation statistics using Scarf (https://scarf.sh), which helps open-source developers fund their work.`)
+    console.log(`Scarf securely logs basic system information and dependency tree details when this package is installed.`)
+    console.log(`The Scarf npm library is open source and permissively licensed at https://github.com/scarf-sh/scarf-js.`)
+    console.log(`For more details about your project's dependencies, try running 'npm ls'.`)
+    console.log(`To opt out of Scarf's analytics, set the environment variable 'SCARF_NO_ANALYTICS=1'.`)
+    console.log(``)
 
     const req = https.request(reqOptions, (res) => {
       res.on('data', d => {
