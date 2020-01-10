@@ -1,5 +1,7 @@
 # scarf-js
 
+[![npm version](https://badge.fury.io/js/%40scarf%2Fscarf.svg)](https://badge.fury.io/js/%40scarf%2Fscarf)
+
 Scarf is like Google Analytics for your npm packages. By sending some basic
 details after installation, this package can help you can gain insights into how
 your packages are installed and by which companies. Scarf aims to help support
