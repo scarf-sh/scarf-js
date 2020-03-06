@@ -21,6 +21,28 @@ collect stats on install, no additional code is required!
 
 Head to your package's dashboard on Scarf to see your reports when available.
 
+#### Configuration
+
+Users of your package will be opted in by default and can opt out by setting the
+`SCARF_ANALYTICS=false` environment variable. If you'd Scarf analytics to
+instead be opt-in, you can set this by adding an entry to your `package.json`
+
+
+```json5
+your-package/package.json
+
+{
+  // ...
+  "scarfSettings": {
+    "defaultOptIn": false
+  }
+  // ...
+}
+```
+
+Scarf will now be opt-out by default, and users can set `SCARF_ANALYTICS=true`
+to opt in.
+
 ### What information does Scarf provide me as a package author?
 
 - Basic system information of your users
@@ -41,7 +63,7 @@ and leaving the anlytics enabled is appreciated. However, if you'd like to opt o
 set this variable in your environment:
 
 ```shell
-export SCARF_NO_ANALYTICS=1
+export SCARF_ANALYTICS=false
 ```
 
 ### Future work
