@@ -3,10 +3,15 @@
   "version": "0.1.0",
   "description": "Scarf is like Google Analytics for your npm packages. Gain insights into how your packages are installed and used, and by which companies.",
   "main": "report.js",
-  "files": ["report.js"],
+  "files": [
+    "report.js"
+  ],
   "scripts": {
     "postinstall": "node ./report.js"
   },
   "author": "Scarf Systems",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "standard": "^14.3.1"
+  }
 }

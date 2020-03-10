@@ -1,7 +1,5 @@
 const path = require('path')
 const os = require('os')
-const util = require('util')
-const fs = require('fs')
 const exec = require('child_process').exec
 const https = require('https')
 
@@ -10,25 +8,30 @@ const scarfHost = 'scarf.sh'
 
 const makeDefaultSettings = () => {
   return {
-    defaultOptIn: true,
+    defaultOptIn: true
   }
 }
 
-function logIfVerbose(toLog, stream) {
+function logIfVerbose (toLog, stream) {
   if (process.env.SCARF_VERBOSE === 'true') {
     (stream || console.log)(toLog)
   }
 }
 
 // SCARF_NO_ANALYTICS was the orginal variable, we'll get rid of it eventually
-const userHasOptedOut = process.env.SCARF_ANALYTICS === 'false' || process.env.SCARF_NO_ANALYTICS='true'
+const userHasOptedOut = (process.env.SCARF_ANALYTICS === 'false' || process.env.SCARF_NO_ANALYTICS === 'true')
 const userHasOptedIn = process.env.SCARF_ANALYTICS === 'true'
 
-function getDependencyInfo(callback) {
+function getDependencyInfo (callback) {
   const moduleSeparated = path.resolve(__dirname).split('node_modules')
-  const dependentPath = moduleSeparated.slice(0, moduleSeparated.length-1).join('node_modules')
+  const dependentPath = moduleSeparated.slice(0, moduleSeparated.length - 1).join('node_modules')
 
-  return exec(`cd ${dependentPath} && npm ls @scarf/scarf --json --long`, function(error, stdout, stderr){
+  return exec(`cd ${dependentPath} && npm ls @scarf/scarf --json --long`, function (error, stdout, stderr) {
+    if (error) {
+      logIfVerbose(`Scarf received an error from npm -ls: ${error}`)
+      return null
+    }
+
     const output = JSON.parse(stdout)
 
     const depsToScarf = findScarfInFullDependencyTree(output)
@@ -42,15 +45,14 @@ function getDependencyInfo(callback) {
       scarf: depsToScarf[depsToScarf.length - 1],
       parent: depsToScarf[depsToScarf.length - 2],
       parentScarfSettings: parentScarfSettings,
-      grandparent: depsToScarf[depsToScarf.length - 3], // might be undefined
+      grandparent: depsToScarf[depsToScarf.length - 3] // might be undefined
     }
 
     return callback(dependencyInfo)
   })
 }
 
-function reportPostInstall() {
-
+function reportPostInstall () {
   const scarfApiToken = process.env.SCARF_API_TOKEN
   getDependencyInfo(dependencyInfo => {
     if (!dependencyInfo.parent || !dependencyInfo.parent.name) {
@@ -75,7 +77,6 @@ function reportPostInstall() {
       }
     } else {
       if (!userHasOptedIn) {
-
         if (!userHasOptedOut) {
           // We'll only print the 'please opt in' text if the user hasn't
           // already opted out
@@ -102,7 +103,7 @@ function reportPostInstall() {
       libraryType: 'npm',
       rawPlatform: os.platform(),
       rawArch: os.arch(),
-      dependencyInfo: dependencyInfo,
+      dependencyInfo: dependencyInfo
     }
     const data = JSON.stringify(infoPayload)
 
@@ -112,13 +113,13 @@ function reportPostInstall() {
       path: '/package-event/install',
       headers: {
         'Content-Type': 'application/json',
-        'Content-Length': data.length,
+        'Content-Length': data.length
       }
     }
 
     if (scarfApiToken) {
-      const authToken = new Buffer(`n/a:${scarfApiToken}`).toString('base64')
-      reqOptions.headers['Authorization'] = `Basic ${authToken}`
+      const authToken = Buffer.from(`n/a:${scarfApiToken}`).toString('base64')
+      reqOptions.headers.Authorization = `Basic ${authToken}`
     }
 
     const req = https.request(reqOptions, (res) => {
@@ -126,7 +127,7 @@ function reportPostInstall() {
       res.on('data', d => {
         logIfVerbose(d.toString())
       })
-    });
+    })
 
     req.on('error', error => {
       logIfVerbose(error, console.error)
@@ -146,7 +147,7 @@ function reportPostInstall() {
 //   parentScarfSettings: { defaultOptIn: true },
 //   grandparentPackage: { name: 'scarfed-lib-consumer', version: '1.0.0' }
 // }
-function findScarfInSubDepTree(pathToDep, deps) {
+function findScarfInSubDepTree (pathToDep, deps) {
   const depNames = Object.keys(deps)
 
   if (!depNames) {
@@ -155,11 +156,11 @@ function findScarfInSubDepTree(pathToDep, deps) {
 
   const scarfFound = depNames.find(depName => depName === scarfLibName)
   if (scarfFound) {
-    return pathToDep.concat([{name: scarfLibName, version: deps[scarfLibName].version}])
+    return pathToDep.concat([{ name: scarfLibName, version: deps[scarfLibName].version }])
   } else {
     for (let i = 0; i < depNames.length; i++) {
       const depName = depNames[i]
-      const newPathToDep = pathToDep.concat([{name: depName, version: deps[depName].version}])
+      const newPathToDep = pathToDep.concat([{ name: depName, version: deps[depName].version }])
       const result = findScarfInSubDepTree(newPathToDep, deps[depName].dependencies)
       if (result) {
         return result
@@ -170,11 +171,11 @@ function findScarfInSubDepTree(pathToDep, deps) {
   return []
 }
 
-function findScarfInFullDependencyTree(tree) {
+function findScarfInFullDependencyTree (tree) {
   if (tree.name === scarfLibName) {
-    return [{name: scarfLibName, version: tree.version}]
+    return [{ name: scarfLibName, version: tree.version }]
   } else {
-    return findScarfInSubDepTree([{name: tree.name, version: tree.version}], tree.dependencies)
+    return findScarfInSubDepTree([{ name: tree.name, version: tree.version }], tree.dependencies)
   }
 }
 
@@ -187,4 +188,3 @@ if (require.main === module) {
     logIfVerbose(e, console.error)
   }
 }
-
