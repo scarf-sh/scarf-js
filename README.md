@@ -1,6 +1,6 @@
 # scarf-js
 
-![](https://github.com/scarf-sh/scarf-js/workflows/Build/badge.svg)
+![](https://github.com/scarf-sh/scarf-js/workflows/CI/badge.svg)
 [![npm version](https://badge.fury.io/js/%40scarf%2Fscarf.svg)](https://badge.fury.io/js/%40scarf%2Fscarf)
 
 Scarf is like Google Analytics for your npm packages. By sending some basic
