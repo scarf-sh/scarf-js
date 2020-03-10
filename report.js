@@ -168,7 +168,7 @@ function findScarfInSubDepTree (pathToDep, deps) {
     }
   }
 
-  return [];
+  return []
 }
 
 function findScarfInFullDependencyTree (tree) {
