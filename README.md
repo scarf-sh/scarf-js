@@ -8,6 +8,13 @@ details after installation, this package can help you can gain insights into how
 your packages are installed and by which companies. Scarf aims to help support
 open-source developers fund their work when used commercially.
 
+### Features
+
+- No dependencies
+- Fully transparent to the user. Don't silently log to someone that hasn't
+  explictly given permission to do so.
+- Never interrupts your package installation. Logging is done on a best effort basis.
+
 ### Installing
 
 You'll first need to create a library entry on [Scarf](https://scarf.sh). Once
