@@ -5,15 +5,16 @@
 
 Scarf is like Google Analytics for your npm packages. By sending some basic
 details after installation, this package can help you can gain insights into how
-your packages are installed and by which companies. Scarf aims to help support
+your packages are used and by which companies. Scarf aims to help support
 open-source developers fund their work when used commercially.
 
 ### Features
 
 - No dependencies
-- Fully transparent to the user. Don't silently log to someone that hasn't
-  explictly given permission to do so.
-- Never interrupts your package installation. Logging is done on a best effort basis.
+- Fully transparent to the user. Scarf will log it's behavior to the console
+  during installation. It will never silently report analytics for someone that
+  hasn't explictly given permission to do so.
+- Never interrupts your package installation. Reporting is done on a best effort basis.
 
 ### Installing
 
@@ -50,6 +51,9 @@ your-package/package.json
 
 Scarf will now be opt-out by default, and users can set `SCARF_ANALYTICS=true`
 to opt in.
+
+Regardless of the default state, Scarf will log what it is doing to users who
+haven't explictly opted in or out.
 
 ### What information does Scarf provide me as a package author?
 
