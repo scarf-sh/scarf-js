@@ -8,6 +8,9 @@ details after installation, this package can help you can gain insights into how
 your packages are used and by which companies. Scarf aims to help support
 open-source developers fund their work when used commercially.
 
+To read more about why we wrote this library, check out [this post](./WHY.org)
+on the topic.
+
 ### Features
 
 - No dependencies

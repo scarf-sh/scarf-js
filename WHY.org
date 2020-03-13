@@ -1,0 +1,110 @@
+#+TITLE: Open Source Library Analytics For Great Good
+#+AUTHOR: Avi Press
+
+The software community as a whole is becoming increasingly more dependent on the
+work relatively small collection of open source software (OSS) developers. This
+wonderful group of people who give their free time to write that software is
+increasingly [[https://blog.usejournal.com/some-difficulties-with-open source-software-c377af831a6a][burning out]] doing work that everyone benefits from. Companies of
+all sizes, whether directly or indirectly, are profiting from the value they get
+out of this OSS. The developers themselves, however, rarely get anything in
+return for the value they are providing to these companies. This should change,
+but the question of how has remained unclear.
+
+I've spoken with many OSS developers and users about their opinions on this
+topic. The general outlook is bleak. Everyone sees the issues, and no one sees a
+good solution. It's a hard problem! Most of the developers producing highly used
+software still don't access to a generally approachable business model that
+works. For users, there's very little incentive to donate one's hard-earned
+money for something that doesn't /cost/ money.
+
+What makes things even harder for these developers is, as Andrew Nesbitt puts it
+in this excellent [[https://www.youtube.com/watch?v=hW4wUpoBHr8][talk]]:
+
+#+BEGIN_QUOTE
+Maintainers are working mostly in the dark 
+#+END_QUOTE
+
+This is an important point. Package maintainers have little insight into how
+their packages are used, which makes their job difficult. The maintainers don't
+know which platforms their users are on, which packages are used together with
+theirs (and with which versions), what errors might be happening, or which
+features of their packages are actually getting used. Github issues alone are a
+noisy and still incomplete picture to the actual user base. Some of the most
+popular OSS projects learn about their users through an annual survey. It's
+notable if not ironic that the group who's life's work essentially boils down
+to automation still prefers manual data collection in this way.
+
+As Nesbitt points out, this is a largely solved problem in other software
+domains, especially the web. Tools like Google Analytics have made it simple and
+easy to understand who is coming to your website and how they use it. The analog
+for open source packages varies by the community but is generally still much less
+developed. Some package managers like Homebrew actually do collect installation
+statistics, as do npm and others. Unfortunately, the data they collect is
+still limited, and whether the data is even exposed to package maintainers
+directly varies between package managers.
+
+So what can we, the software development community do about this? 
+
+One thing we could all do would be to convince our employers to support the
+awesome people that build and maintain the OSS they rely on. But you knew that
+already. One free thing we can do is:
+
+/Build, use, and tolerate OSS that reports usage data back to the maintainers./
+Not everyone can financially support OSS, but anyone can report usage
+statistics. This would help maintainers be better informed about their software.
+In a world where it is not uncommon for a 3rd party library to break your code
+in a patch release, having well-informed maintainers benefits everyone. It will
+help you deliver better software, and it will improve all the other software you
+use.
+
+Today, Scarf is rolling out a [[https://github.com/scarf-sh/scarf-js][new library]] to help with this exact problem,
+targeting the node ecosystem.
+
+
+*For Maintainers*
+
+As a package author, simply adding a dependency on Scarf will kick off data
+reporting anytime your package is installed, giving you key insights that can
+help make your life just a little bit easier.
+
+- Which packages are commonly used along with yours?
+- Some insight into your users:
+  - Usage trends (/Is my package gaining popularity or losing it?/)
+  - Operating systems (/Did the new version break Windows?/)
+  - Country (/What language should I consider translate the README to?/)
+  - Company (/Which companies might be interested in supporting my work?/)
+
+The library itself has zero dependencies, transparently logs everything it's
+doing, and logs on a best-effort basis so it will never interrupt the user. If
+you configure Scarf to be opt-out by default, you don't risk collecting data
+from anyone who didn't explicitly give you the OK.
+
+*For Users*
+
+If you are a user of a package that's using Scarf, you can feel good about
+knowing that you are doing your part to support the amazing people who build the
+open source software you rely on. Now there's a concrete way to support OSS
+developers without paying money!
+
+Concerned about privacy? While Scarf keeps data as safe as possible with up to
+date best-practices, it is certainly understandable that reporting data is not
+appropriate in all situations. You might be against it altogether. That's ok!
+Whether the package authors choose to use Scarf with users opted in or out by
+default, you can enable or disable Scarf analytics with an environment variable.
+Your data will not leave your computer, and you can still be happy that the
+software you use can be more effectively maintained.
+
+I hope that by giving open source developers standardized tools for safe
+data collection and analytics, we will have a community of better informed, less
+burnt out maintainers. A general movement in this direction would help both
+makers and users of open source! Whether or not you yourself are willing to
+report data, being supportive of developers simply /asking/ for usage data can
+help the situation. No matter what your relationship with open source software
+is, there's something you can do to make things better for everyone!
+
+---
+
+If you're interested in adding Scarf to your npm package, follow the links below:
+
+- Scarf on github: [[https://github.com/scarf-sh/scarf-js]]
+- Scarf website: [[https://scarf.sh/library]]
