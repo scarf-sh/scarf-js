@@ -12,10 +12,10 @@ but the question of how has remained unclear.
 
 I've spoken with many OSS developers and users about their opinions on this
 topic. The general outlook is bleak. Everyone sees the issues, and no one sees a
-good solution. It's a hard problem! Most of the developers producing highly used
-software still don't access to a generally approachable business model that
-works. For users, there's very little incentive to donate one's hard-earned
-money for something that doesn't /cost/ money.
+good solution. It's a hard problem! Most of the developers producing widely used
+software still don't have access to a generally approachable and successful
+business model. For users, there's very little incentive to donate one's
+hard-earned money for something that doesn't /cost/ money.
 
 What makes things even harder for these developers is, as Andrew Nesbitt puts it
 in this excellent [[https://www.youtube.com/watch?v=hW4wUpoBHr8][talk]]:
@@ -25,14 +25,14 @@ Maintainers are working mostly in the dark
 #+END_QUOTE
 
 This is an important point. Package maintainers have little insight into how
-their packages are used, which makes their job difficult. The maintainers don't
-know which platforms their users are on, which packages are used together with
-theirs (and with which versions), what errors might be happening, or which
-features of their packages are actually getting used. Github issues alone are a
-noisy and still incomplete picture to the actual user base. Some of the most
-popular OSS projects learn about their users through an annual survey. It's
-notable if not ironic that the group who's life's work essentially boils down
-to automation still prefers manual data collection in this way.
+their packages are used, which makes their job difficult. The maintainers
+typically don't know which platforms their users are on, which packages are used
+together with theirs (and with which versions), what errors might be happening,
+or which features of their packages are actually getting used. Github issues
+alone are a noisy and still incomplete picture to the actual user base. Some of
+the most popular OSS projects learn about their users through an annual survey.
+It's notable if not ironic that the group who's life's work essentially boils
+down to automation still prefers manual data collection in this way.
 
 As Nesbitt points out, this is a largely solved problem in other software
 domains, especially the web. Tools like Google Analytics have made it simple and
@@ -104,7 +104,8 @@ is, there's something you can do to make things better for everyone!
 
 ---
 
-If you're interested in adding Scarf to your npm package, follow the links below:
+If you're interested in adding Scarf to your npm package or learning more:
 
-- Scarf on github: [[https://github.com/scarf-sh/scarf-js]]
-- Scarf website: [[https://scarf.sh/library]]
+- Scarf homepage: [[https://scarf.sh/library]]
+- GitHub: [[https://github.com/scarf-sh/scarf-js][https://github.com/scarf-sh/scarf-js]]
+- npm: [[https://www.npmjs.com/package/@scarf/scarf][https://www.npmjs.com/package/@scarf/scarf]]
