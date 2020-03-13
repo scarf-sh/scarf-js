@@ -1,27 +1,37 @@
 const path = require('path')
 const os = require('os')
-const util = require('util')
-const fs = require('fs')
 const exec = require('child_process').exec
 const https = require('https')
-const crypto = require('crypto')
-// if crypto isn't loaded in the node runtime, we'll skip
-const hash = crypto ? crypto.createHash('sha256') : null
 
 const scarfLibName = '@scarf/scarf'
 const scarfHost = 'scarf.sh'
 
-function logIfVerbose(toLog, stream) {
+const makeDefaultSettings = () => {
+  return {
+    defaultOptIn: true
+  }
+}
+
+function logIfVerbose (toLog, stream) {
   if (process.env.SCARF_VERBOSE === 'true') {
     (stream || console.log)(toLog)
   }
 }
 
-function getDependencyInfo(callback) {
-  const moduleSeparated = path.resolve(__dirname).split('node_modules')
-  const dependentPath = moduleSeparated.slice(0, moduleSeparated.length-1).join('node_modules')
+// SCARF_NO_ANALYTICS was the orginal variable, we'll get rid of it eventually
+const userHasOptedOut = (process.env.SCARF_ANALYTICS === 'false' || process.env.SCARF_NO_ANALYTICS === 'true')
+const userHasOptedIn = process.env.SCARF_ANALYTICS === 'true'
 
-  return exec(`cd ${dependentPath} && npm ls @scarf/scarf --json`, function(error, stdout, stderr){
+function getDependencyInfo (callback) {
+  const moduleSeparated = path.resolve(__dirname).split('node_modules')
+  const dependentPath = moduleSeparated.slice(0, moduleSeparated.length - 1).join('node_modules')
+
+  return exec(`cd ${dependentPath} && npm ls @scarf/scarf --json --long`, function (error, stdout, stderr) {
+    if (error) {
+      logIfVerbose(`Scarf received an error from npm -ls: ${error}`)
+      return null
+    }
+
     const output = JSON.parse(stdout)
 
     const depsToScarf = findScarfInFullDependencyTree(output)
@@ -29,34 +39,71 @@ function getDependencyInfo(callback) {
       return null
     }
 
+    const parentScarfSettings = Object.assign(makeDefaultSettings(), output.scarfSettings || {})
+
     const dependencyInfo = {
       scarf: depsToScarf[depsToScarf.length - 1],
       parent: depsToScarf[depsToScarf.length - 2],
-      grandparent: depsToScarf[depsToScarf.length - 3], // might be undefined
+      parentScarfSettings: parentScarfSettings,
+      grandparent: depsToScarf[depsToScarf.length - 3] // might be undefined
     }
 
     return callback(dependencyInfo)
   })
 }
 
-function reportPostInstall() {
-
-  const hasOptedOut = process.env.SCARF_NO_ANALYTICS === '1' || process.env.SCARF_NO_ANALYTICS === 'true'
-  if (hasOptedOut) {
-    return
-  }
-
+function reportPostInstall () {
   const scarfApiToken = process.env.SCARF_API_TOKEN
   getDependencyInfo(dependencyInfo => {
     if (!dependencyInfo.parent || !dependencyInfo.parent.name) {
       return
     }
 
+    if (dependencyInfo.parentScarfSettings.defaultOptIn) {
+      if (userHasOptedOut) {
+        return
+      }
+
+      if (!userHasOptedIn) {
+        console.log(`
+  The dependency '${dependencyInfo.parent.name}' is tracking installation
+  statistics using Scarf (https://scarf.sh), which helps open-source developers
+  fund and maintain their projects. Scarf securely logs basic installation
+  details when this package is installed. The Scarf npm library is open source
+  and permissively licensed at https://github.com/scarf-sh/scarf-js. For more
+  details about your project's dependencies, try running 'npm ls'. To opt out of
+  analytics, set the environment variable 'SCARF_ANALYTICS=false'.
+`)
+      }
+    } else {
+      if (!userHasOptedIn) {
+        if (!userHasOptedOut) {
+          // We'll only print the 'please opt in' text if the user hasn't
+          // already opted out
+          console.log(`
+  The dependency '${dependencyInfo.parent.name}' would like to track
+  installation statistics using Scarf (https://scarf.sh), which helps
+  open-source developers fund and maintain their projects. Reporting is disabled
+  by default for this package. When enabled, Scarf securely logs basic
+  installation details when this package is installed. The Scarf npm library is
+  open source and permissively licensed at https://github.com/scarf-sh/scarf-js.
+  For more details about your project's dependencies, try running 'npm ls'.
+
+  Please consider enabling Scarf to support the maintainer(s) of
+  '${dependencyInfo.parent.name}'. To opt in, set the environment variable
+  'SCARF_ANALYTICS=true'.
+`)
+        }
+
+        return
+      }
+    }
+
     const infoPayload = {
       libraryType: 'npm',
       rawPlatform: os.platform(),
       rawArch: os.arch(),
-      dependencyInfo: dependencyInfo,
+      dependencyInfo: dependencyInfo
     }
     const data = JSON.stringify(infoPayload)
 
@@ -66,27 +113,21 @@ function reportPostInstall() {
       path: '/package-event/install',
       headers: {
         'Content-Type': 'application/json',
-        'Content-Length': data.length,
+        'Content-Length': data.length
       }
     }
 
     if (scarfApiToken) {
-      const authToken = new Buffer(`n/a:${scarfApiToken}`).toString('base64')
-      reqOptions.headers['Authorization'] = `Basic ${authToken}`
+      const authToken = Buffer.from(`n/a:${scarfApiToken}`).toString('base64')
+      reqOptions.headers.Authorization = `Basic ${authToken}`
     }
 
-    console.log(`The dependency '${dependencyInfo.parent.name}' is tracking installation statistics using Scarf (https://scarf.sh), which helps open-source developers fund their work.`)
-    console.log(`Scarf securely logs basic system information and dependency tree details when this package is installed.`)
-    console.log(`The Scarf npm library is open source and permissively licensed at https://github.com/scarf-sh/scarf-js.`)
-    console.log(`For more details about your project's dependencies, try running 'npm ls'.`)
-    console.log(`To opt out of analytics, set the environment variable 'SCARF_NO_ANALYTICS=1'.`)
-    console.log(``)
-
     const req = https.request(reqOptions, (res) => {
+      logIfVerbose(`Response status: ${res.statusCode}`)
       res.on('data', d => {
         logIfVerbose(d.toString())
       })
-    });
+    })
 
     req.on('error', error => {
       logIfVerbose(error, console.error)
@@ -103,9 +144,10 @@ function reportPostInstall() {
 // {
 //   scarfPackage: {name: `@scarf/scarf`, version: '0.0.1'},
 //   parentPackage: { name: 'scarfed-library', version: '1.0.0' },
+//   parentScarfSettings: { defaultOptIn: true },
 //   grandparentPackage: { name: 'scarfed-lib-consumer', version: '1.0.0' }
 // }
-function findScarfInSubDepTree(pathToDep, deps) {
+function findScarfInSubDepTree (pathToDep, deps) {
   const depNames = Object.keys(deps)
 
   if (!depNames) {
@@ -114,11 +156,11 @@ function findScarfInSubDepTree(pathToDep, deps) {
 
   const scarfFound = depNames.find(depName => depName === scarfLibName)
   if (scarfFound) {
-    return pathToDep.concat([{name: scarfLibName, version: deps[scarfLibName].version}])
+    return pathToDep.concat([{ name: scarfLibName, version: deps[scarfLibName].version }])
   } else {
     for (let i = 0; i < depNames.length; i++) {
       const depName = depNames[i]
-      const newPathToDep = pathToDep.concat([{name: depName, version: deps[depName].version}])
+      const newPathToDep = pathToDep.concat([{ name: depName, version: deps[depName].version }])
       const result = findScarfInSubDepTree(newPathToDep, deps[depName].dependencies)
       if (result) {
         return result
@@ -129,11 +171,11 @@ function findScarfInSubDepTree(pathToDep, deps) {
   return []
 }
 
-function findScarfInFullDependencyTree(tree) {
+function findScarfInFullDependencyTree (tree) {
   if (tree.name === scarfLibName) {
-    return [{name: scarfLibName, version: tree.version}]
+    return [{ name: scarfLibName, version: tree.version }]
   } else {
-    return findScarfInSubDepTree([{name: tree.name, version: tree.version}], tree.dependencies)
+    return findScarfInSubDepTree([{ name: tree.name, version: tree.version }], tree.dependencies)
   }
 }
 
@@ -146,4 +188,3 @@ if (require.main === module) {
     logIfVerbose(e, console.error)
   }
 }
-

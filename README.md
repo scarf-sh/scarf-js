@@ -1,11 +1,23 @@
 # scarf-js
 
+![](https://github.com/scarf-sh/scarf-js/workflows/CI/badge.svg)
 [![npm version](https://badge.fury.io/js/%40scarf%2Fscarf.svg)](https://badge.fury.io/js/%40scarf%2Fscarf)
 
 Scarf is like Google Analytics for your npm packages. By sending some basic
 details after installation, this package can help you can gain insights into how
-your packages are installed and by which companies. Scarf aims to help support
+your packages are used and by which companies. Scarf aims to help support
 open-source developers fund their work when used commercially.
+
+To read more about why we wrote this library, check out [this post](./WHY.org)
+on the topic.
+
+### Features
+
+- No dependencies
+- Fully transparent to the user. Scarf will log it's behavior to the console
+  during installation. It will never silently report analytics for someone that
+  hasn't explictly given permission to do so.
+- Never interrupts your package installation. Reporting is done on a best effort basis.
 
 ### Installing
 
@@ -20,6 +32,31 @@ Once your library is published to npm with this change, Scarf will automatically
 collect stats on install, no additional code is required!
 
 Head to your package's dashboard on Scarf to see your reports when available.
+
+#### Configuration
+
+Users of your package will be opted in by default and can opt out by setting the
+`SCARF_ANALYTICS=false` environment variable. If you'd Scarf analytics to
+instead be opt-in, you can set this by adding an entry to your `package.json`
+
+
+```json5
+your-package/package.json
+
+{
+  // ...
+  "scarfSettings": {
+    "defaultOptIn": false
+  }
+  // ...
+}
+```
+
+Scarf will now be opt-out by default, and users can set `SCARF_ANALYTICS=true`
+to opt in.
+
+Regardless of the default state, Scarf will log what it is doing to users who
+haven't explictly opted in or out.
 
 ### What information does Scarf provide me as a package author?
 
@@ -41,7 +78,7 @@ and leaving the anlytics enabled is appreciated. However, if you'd like to opt o
 set this variable in your environment:
 
 ```shell
-export SCARF_NO_ANALYTICS=1
+export SCARF_ANALYTICS=false
 ```
 
 ### Future work
