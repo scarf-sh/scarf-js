@@ -40,7 +40,7 @@ instead be opt-in, you can set this by adding an entry to your `package.json`
 
 
 ```json5
-your-package/package.json
+// your-package/package.json
 
 {
   // ...
