@@ -1,10 +1,11 @@
 const path = require('path')
 const os = require('os')
 const exec = require('child_process').exec
-const https = require('https')
+const localDevPort = process.env.SCARF_LOCAL_PORT
+const https = localDevPort ? require('http') : require('https')
 
+const scarfHost = localDevPort ? 'localhost' : 'scarf.sh'
 const scarfLibName = '@scarf/scarf'
-const scarfHost = 'scarf.sh'
 
 const makeDefaultSettings = () => {
   return {
@@ -39,14 +40,13 @@ function getDependencyInfo (callback) {
       return null
     }
 
-    const parentScarfSettings = Object.assign(makeDefaultSettings(), output.scarfSettings || {})
-
     const dependencyInfo = {
       scarf: depsToScarf[depsToScarf.length - 1],
       parent: depsToScarf[depsToScarf.length - 2],
-      parentScarfSettings: parentScarfSettings,
       grandparent: depsToScarf[depsToScarf.length - 3] // might be undefined
     }
+
+    dependencyInfo.parent.scarfSettings = Object.assign(makeDefaultSettings(), dependencyInfo.parent.scarfSettings || {})
 
     return callback(dependencyInfo)
   })
@@ -59,7 +59,7 @@ function reportPostInstall () {
       return
     }
 
-    if (dependencyInfo.parentScarfSettings.defaultOptIn) {
+    if (dependencyInfo.parent.scarfSettings.defaultOptIn) {
       if (userHasOptedOut) {
         return
       }
@@ -109,6 +109,7 @@ function reportPostInstall () {
 
     const reqOptions = {
       host: scarfHost,
+      port: localDevPort,
       method: 'POST',
       path: '/package-event/install',
       headers: {
@@ -143,8 +144,7 @@ function reportPostInstall () {
 //
 // {
 //   scarfPackage: {name: `@scarf/scarf`, version: '0.0.1'},
-//   parentPackage: { name: 'scarfed-library', version: '1.0.0' },
-//   parentScarfSettings: { defaultOptIn: true },
+//   parentPackage: { name: 'scarfed-library', version: '1.0.0', scarfSettings: { defaultOptIn: true } },
 //   grandparentPackage: { name: 'scarfed-lib-consumer', version: '1.0.0' }
 // }
 function findScarfInSubDepTree (pathToDep, deps) {
@@ -160,7 +160,13 @@ function findScarfInSubDepTree (pathToDep, deps) {
   } else {
     for (let i = 0; i < depNames.length; i++) {
       const depName = depNames[i]
-      const newPathToDep = pathToDep.concat([{ name: depName, version: deps[depName].version }])
+      const newPathToDep = pathToDep.concat([
+        {
+          name: depName,
+          version: deps[depName].version,
+          scarfSettings: deps[depName].scarfSettings
+        }
+      ])
       const result = findScarfInSubDepTree(newPathToDep, deps[depName].dependencies)
       if (result) {
         return result
@@ -175,7 +181,11 @@ function findScarfInFullDependencyTree (tree) {
   if (tree.name === scarfLibName) {
     return [{ name: scarfLibName, version: tree.version }]
   } else {
-    return findScarfInSubDepTree([{ name: tree.name, version: tree.version }], tree.dependencies)
+    return findScarfInSubDepTree([{
+      name: tree.name,
+      version: tree.version,
+      scarfSettings: tree.scarfSettings
+    }], tree.dependencies)
   }
 }
 
