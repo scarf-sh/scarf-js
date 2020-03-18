@@ -161,9 +161,10 @@ function findScarfInSubDepTree (pathToDep, deps) {
     for (let i = 0; i < depNames.length; i++) {
       const depName = depNames[i]
       const newPathToDep = pathToDep.concat([
-        { name: depName,
+        {
+          name: depName,
           version: deps[depName].version,
-          scarfSettings: deps[depName].scarfSettings,
+          scarfSettings: deps[depName].scarfSettings
         }
       ])
       const result = findScarfInSubDepTree(newPathToDep, deps[depName].dependencies)
@@ -183,7 +184,7 @@ function findScarfInFullDependencyTree (tree) {
     return findScarfInSubDepTree([{
       name: tree.name,
       version: tree.version,
-      scarfSettings: tree.scarfSettings,
+      scarfSettings: tree.scarfSettings
     }], tree.dependencies)
   }
 }
