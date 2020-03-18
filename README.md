@@ -80,6 +80,11 @@ set this variable in your environment:
 export SCARF_ANALYTICS=false
 ```
 
+### Developing
+
+Setting the environment variable `SCARF_LOCAL_PORT=8080` will configure Scarf to
+use http://localhost:${SCARF_LOCAL_PORT} as the analytics endpoint host.
+
 ### Future work
 
 Future releases of scarf-js will provide a module of utility functions to
