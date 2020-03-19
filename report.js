@@ -114,7 +114,7 @@ async function reportPostInstall () {
           const timeout1 = setTimeout(() => {
             console.log('')
             reject(new Error('Timeout waiting for user opt in'))
-          }, 5000)
+          }, 7000)
 
           stdin.on('data', async function (data) {
             clearTimeout(timeout1)
@@ -136,7 +136,7 @@ async function reportPostInstall () {
               }
             }
 
-            process.stdout.write('Save this preference to your project\'s package.json file? (y/N): ')
+            process.stdout.write(`Save this preference to your project's package.json file? (y/N): `)
 
             setTimeout(() => {
               console.log('')
