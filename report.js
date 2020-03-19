@@ -135,7 +135,7 @@ async function reportPostInstall () {
               }
             }
 
-            process.stdout.write(`Save this preference to your project's package.json file? (y/N): `)
+            process.stdout.write('Save this preference to your project\'s package.json file? (y/N): ')
 
             setTimeout(() => {
               console.log('')
