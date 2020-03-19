@@ -6,7 +6,6 @@ const https = localDevPort ? require('http') : require('https')
 const fs = require('fs').promises
 
 const scarfHost = localDevPort ? 'localhost' : 'scarf.sh'
-
 const scarfLibName = '@scarf/scarf'
 
 const makeDefaultSettings = () => {
