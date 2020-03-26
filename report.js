@@ -30,6 +30,21 @@ const userHasOptedIn = (rootPackage) => {
   return (rootPackage && rootPackage.scarfSettings && rootPackage.scarfSettings.enabled) || process.env.SCARF_ANALYTICS === 'true'
 }
 
+function redactScopedPackageInfo (dependencyInfo) {
+  const scopedRegex = /@\S+\//
+  const privatePackageRewrite = '@private/private'
+  const privateVersionRewrite = '0'
+  if (dependencyInfo.grandparent && dependencyInfo.grandparent.name.match(scopedRegex)) {
+    dependencyInfo.grandparent.name = privatePackageRewrite
+    dependencyInfo.grandparent.version = privateVersionRewrite
+  }
+  if (dependencyInfo.rootPackage && dependencyInfo.rootPackage.name.match(scopedRegex)) {
+    dependencyInfo.rootPackage.name = privateVersionRewrite
+    dependencyInfo.rootPackage.version = privateVersionRewrite
+  }
+  return dependencyInfo
+}
+
 async function getDependencyInfo () {
   const moduleSeparated = path.resolve(__dirname).split('node_modules')
   const dependentPath = moduleSeparated.slice(0, moduleSeparated.length - 1).join('node_modules')
@@ -57,6 +72,7 @@ async function getDependencyInfo () {
       }
 
       dependencyInfo.parent.scarfSettings = Object.assign(makeDefaultSettings(), dependencyInfo.parent.scarfSettings || {})
+      redactScopedPackageInfo(dependencyInfo)
 
       return resolve(dependencyInfo)
     })
