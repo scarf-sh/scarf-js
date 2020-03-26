@@ -39,7 +39,7 @@ function redactScopedPackageInfo (dependencyInfo) {
     dependencyInfo.grandparent.version = privateVersionRewrite
   }
   if (dependencyInfo.rootPackage && dependencyInfo.rootPackage.name.match(scopedRegex)) {
-    dependencyInfo.rootPackage.name = '@private/private'
+    dependencyInfo.rootPackage.name = privateVersionRewrite
     dependencyInfo.rootPackage.version = privateVersionRewrite
   }
   return dependencyInfo
