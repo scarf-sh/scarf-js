@@ -30,17 +30,17 @@ const userHasOptedIn = (rootPackage) => {
   return (rootPackage && rootPackage.scarfSettings && rootPackage.scarfSettings.enabled) || process.env.SCARF_ANALYTICS === 'true'
 }
 
-function redactScopedPackageInfo(dependencyInfo) {
-  const scopedRegex = /\@\S+\//
+function redactScopedPackageInfo (dependencyInfo) {
+  const scopedRegex = /@\S+\//
   const privatePackageRewrite = '@private/private'
   const privateVersionRewrite = '0'
   if (dependencyInfo.grandparent && dependencyInfo.grandparent.name.match(scopedRegex)) {
     dependencyInfo.grandparent.name = privatePackageRewrite
     dependencyInfo.grandparent.version = privateVersionRewrite
   }
-  if (dependencyInfo.root && dependencyInfo.root.name.match(scopedRegex)) {
-    dependencyInfo.root.name = '@private/private'
-    dependencyInfo.root.version = privateVersionRewrite
+  if (dependencyInfo.rootPackage && dependencyInfo.rootPackage.name.match(scopedRegex)) {
+    dependencyInfo.rootPackage.name = '@private/private'
+    dependencyInfo.rootPackage.version = privateVersionRewrite
   }
   return dependencyInfo
 }
@@ -241,7 +241,7 @@ function findScarfInSubDepTree (pathToDep, deps) {
         {
           name: depName,
           version: deps[depName].version,
-          scarfSettings: deps[depName].scarfSettings,
+          scarfSettings: deps[depName].scarfSettings
         }
       ])
       const result = findScarfInSubDepTree(newPathToDep, deps[depName].dependencies)
