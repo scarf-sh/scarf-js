@@ -78,13 +78,29 @@ haven't explictly opted in or out.
   - The root package of the dependency tree.
 ### As a user of a package using Scarf, how can I opt out of analytics?
 
-Scarf's analytics help support developers of the open source packages you are using, so 
-and leaving the anlytics enabled is appreciated. However, if you'd like to opt out,
-set this variable in your environment:
+Scarf's analytics help support developers of the open source packages you are
+using, so enabling analytics is appreciated. However, if you'd like to opt out,
+you can add your preference to your project's `package.json`:
+
+```json5
+// your-package/package.json
+
+{
+  // ...
+  "scarfSettings": {
+    "enabled": false
+  }
+  // ...
+}
+```
+
+Alternatively, you can set this variable in your environment:
 
 ```shell
 export SCARF_ANALYTICS=false
 ```
+
+Either route will disable Scarf for all packages.
 
 ### Developing
 
