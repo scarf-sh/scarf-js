@@ -8,6 +8,8 @@ const fs = require('fs').promises
 const scarfHost = localDevPort ? 'localhost' : 'scarf.sh'
 const scarfLibName = '@scarf/scarf'
 
+const rootPath = path.resolve(__dirname).split('node_modules')[0]
+
 const makeDefaultSettings = () => {
   return {
     defaultOptIn: true
@@ -30,7 +32,8 @@ const userHasOptedIn = (rootPackage) => {
   return (rootPackage && rootPackage.scarfSettings && rootPackage.scarfSettings.enabled) || process.env.SCARF_ANALYTICS === 'true'
 }
 
-function redactScopedPackageInfo (dependencyInfo) {
+// We don't send any paths, we don't send any scoped package names or versions
+function redactSensitivePackageInfo (dependencyInfo) {
   const scopedRegex = /@\S+\//
   const privatePackageRewrite = '@private/private'
   const privateVersionRewrite = '0'
@@ -42,39 +45,53 @@ function redactScopedPackageInfo (dependencyInfo) {
     dependencyInfo.rootPackage.name = privateVersionRewrite
     dependencyInfo.rootPackage.version = privateVersionRewrite
   }
+  delete (dependencyInfo.rootPackage.packageJsonPath)
+  delete (dependencyInfo.rootPackage.path)
+  delete (dependencyInfo.parent.path)
+  delete (dependencyInfo.scarf.path)
+  if (dependencyInfo.grandparent) {
+    delete (dependencyInfo.grandparent.path)
+  }
   return dependencyInfo
 }
 
 async function getDependencyInfo () {
-  const moduleSeparated = path.resolve(__dirname).split('node_modules')
-  const dependentPath = moduleSeparated.slice(0, moduleSeparated.length - 1).join('node_modules')
-
   return new Promise((resolve, reject) => {
-    exec(`cd ${dependentPath} && npm ls @scarf/scarf --json --long`, function (error, stdout, stderr) {
+    exec(`cd ${rootPath} && npm ls @scarf/scarf --json --long`, function (error, stdout, stderr) {
       if (error) {
         return reject(new Error(`Scarf received an error from npm -ls: ${error}`))
       }
 
       const output = JSON.parse(stdout)
 
-      const depsToScarf = findScarfInFullDependencyTree(output)
-      if (depsToScarf.length < 2) {
+      let depsToScarf = findScarfInFullDependencyTree(output)
+      depsToScarf = depsToScarf.filter(depChain => depChain.length > 2)
+      if (depsToScarf.length === 0) {
         return reject(new Error('No Scarf parent package found'))
       }
 
       const rootPackageDetails = rootPackageDepInfo(output)
 
-      const dependencyInfo = {
-        scarf: depsToScarf[depsToScarf.length - 1],
-        parent: depsToScarf[depsToScarf.length - 2],
-        grandparent: depsToScarf[depsToScarf.length - 3], // might be undefined
-        rootPackage: rootPackageDetails
+      const dependencyInfo = depsToScarf.map(depChain => {
+        return {
+          scarf: depChain[depChain.length - 1],
+          parent: depChain[depChain.length - 2],
+          grandparent: depChain[depChain.length - 3], // might be undefined
+          rootPackage: rootPackageDetails
+        }
+      })
+
+      dependencyInfo.forEach(d => {
+        d.parent.scarfSettings = Object.assign(makeDefaultSettings(), d.parent.scarfSettings || {})
+      })
+
+      // Here, we find the dependency chain that corresponds to the scarf package we're currently in
+      const dependencyToReport = dependencyInfo.find(dep => (dep.scarf.path === __dirname))
+      if (!dependencyToReport) {
+        return reject(new Error(`Couldn't find dependency info for path ${__dirname}`))
       }
 
-      dependencyInfo.parent.scarfSettings = Object.assign(makeDefaultSettings(), dependencyInfo.parent.scarfSettings || {})
-      redactScopedPackageInfo(dependencyInfo)
-
-      return resolve(dependencyInfo)
+      return resolve(dependencyToReport)
     })
   })
 }
@@ -174,7 +191,7 @@ async function reportPostInstall () {
     }
   })
 
-  delete (dependencyInfo.rootPackage.packageJsonPath)
+  redactSensitivePackageInfo(dependencyInfo)
 
   const infoPayload = {
     libraryType: 'npm',
@@ -182,7 +199,9 @@ async function reportPostInstall () {
     rawArch: os.arch(),
     dependencyInfo: dependencyInfo
   }
+
   const data = JSON.stringify(infoPayload)
+  logIfVerbose(`Scarf payload: ${data}`)
 
   const reqOptions = {
     host: scarfHost,
@@ -216,47 +235,50 @@ async function reportPostInstall () {
   })
 }
 
-// Find a path to Scarf from the json output of npm ls @scarf/scarf --json in
-// the package that's directly including Scarf
+// Find all paths to Scarf from the json output of npm ls @scarf/scarf --json in
+// the root package being installed by the user
 //
-// {
+// [{
 //   scarfPackage: {name: `@scarf/scarf`, version: '0.0.1'},
 //   parentPackage: { name: 'scarfed-library', version: '1.0.0', scarfSettings: { defaultOptIn: true } },
 //   grandparentPackage: { name: 'scarfed-lib-consumer', version: '1.0.0' }
-// }
+// }]
 function findScarfInSubDepTree (pathToDep, deps) {
-  const depNames = Object.keys(deps)
+  const depNames = Object.keys(deps || {})
 
   if (!depNames) {
     return []
   }
 
   const scarfFound = depNames.find(depName => depName === scarfLibName)
+  const output = []
   if (scarfFound) {
-    return pathToDep.concat([{ name: scarfLibName, version: deps[scarfLibName].version }])
-  } else {
-    for (let i = 0; i < depNames.length; i++) {
-      const depName = depNames[i]
-      const newPathToDep = pathToDep.concat([
-        {
-          name: depName,
-          version: deps[depName].version,
-          scarfSettings: deps[depName].scarfSettings
-        }
-      ])
-      const result = findScarfInSubDepTree(newPathToDep, deps[depName].dependencies)
-      if (result) {
-        return result
+    output.push(pathToDep.concat([{ name: scarfLibName, version: deps[scarfLibName].version, path: deps[scarfLibName].path }]))
+  }
+  for (let i = 0; i < depNames.length; i++) {
+    const depName = depNames[i]
+    const newPathToDep = pathToDep.concat([
+      {
+        name: depName,
+        version: deps[depName].version,
+        scarfSettings: deps[depName].scarfSettings,
+        path: deps[depName].path
+      }
+    ])
+    const results = findScarfInSubDepTree(newPathToDep, deps[depName].dependencies)
+    if (results) {
+      for (let j = 0; j < results.length; j++) {
+        output.push(results[j])
       }
     }
   }
 
-  return []
+  return output
 }
 
 function findScarfInFullDependencyTree (tree) {
   if (tree.name === scarfLibName) {
-    return [{ name: scarfLibName, version: tree.version }]
+    return [[{ name: scarfLibName, version: tree.version }]]
   } else {
     return findScarfInSubDepTree([packageDetailsFromDepInfo(tree)], tree.dependencies)
   }
@@ -266,7 +288,8 @@ function packageDetailsFromDepInfo (tree) {
   return {
     name: tree.name,
     version: tree.version,
-    scarfSettings: tree.scarfSettings
+    scarfSettings: tree.scarfSettings,
+    path: tree.path
   }
 }
 
