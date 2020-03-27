@@ -32,6 +32,7 @@ const userHasOptedIn = (rootPackage) => {
   return (rootPackage && rootPackage.scarfSettings && rootPackage.scarfSettings.enabled) || process.env.SCARF_ANALYTICS === 'true'
 }
 
+// We don't send any paths, we don't send any scoped package names or versions
 function redactSensitivePackageInfo (dependencyInfo) {
   const scopedRegex = /@\S+\//
   const privatePackageRewrite = '@private/private'
@@ -84,6 +85,8 @@ async function getDependencyInfo () {
       })
 
       dependencyInfo.forEach(d => d.parent.scarfSettings = Object.assign(makeDefaultSettings(), d.parent.scarfSettings || {}))
+
+      // Here, we find the dependency chain that corresponds to the scarf package we're currently in
       const dependencyToReport = dependencyInfo.find(dep => dep.scarf.path === __dirname)
       if (!dependencyToReport) {
         return reject(new Error(`Couldn't find dependency info for path ${__dirname}`))
@@ -234,7 +237,7 @@ async function reportPostInstall () {
 }
 
 // Find all paths to Scarf from the json output of npm ls @scarf/scarf --json in
-// the package that's directly including Scarf
+// the root package being installed by the user
 //
 // [{
 //   scarfPackage: {name: `@scarf/scarf`, version: '0.0.1'},
