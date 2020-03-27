@@ -56,9 +56,6 @@ function redactSensitivePackageInfo (dependencyInfo) {
 }
 
 async function getDependencyInfo () {
-  const moduleSeparated = path.resolve(__dirname).split('node_modules')
-  const rootPath = moduleSeparated[0]
-
   return new Promise((resolve, reject) => {
     exec(`cd ${rootPath} && npm ls @scarf/scarf --json --long`, function (error, stdout, stderr) {
       if (error) {
@@ -69,13 +66,13 @@ async function getDependencyInfo () {
 
       let depsToScarf = findScarfInFullDependencyTree(output)
       depsToScarf = depsToScarf.filter(depChain => depChain.length > 2)
-      if (depsToScarf.length == 0) {
+      if (depsToScarf.length === 0) {
         return reject(new Error('No Scarf parent package found'))
       }
 
       const rootPackageDetails = rootPackageDepInfo(output)
 
-      let dependencyInfo = depsToScarf.map(depChain => {
+      const dependencyInfo = depsToScarf.map(depChain => {
         return {
           scarf: depChain[depChain.length - 1],
           parent: depChain[depChain.length - 2],
@@ -84,10 +81,12 @@ async function getDependencyInfo () {
         }
       })
 
-      dependencyInfo.forEach(d => d.parent.scarfSettings = Object.assign(makeDefaultSettings(), d.parent.scarfSettings || {}))
+      dependencyInfo.forEach(d => {
+        d.parent.scarfSettings = Object.assign(makeDefaultSettings(), d.parent.scarfSettings || {})
+      })
 
       // Here, we find the dependency chain that corresponds to the scarf package we're currently in
-      const dependencyToReport = dependencyInfo.find(dep => dep.scarf.path === __dirname)
+      const dependencyToReport = dependencyInfo.find(dep => (dep.scarf.path === __dirname))
       if (!dependencyToReport) {
         return reject(new Error(`Couldn't find dependency info for path ${__dirname}`))
       }
