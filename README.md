@@ -68,8 +68,14 @@ haven't explictly opted in or out.
 - The operating system you are using
 - The version of the package you're installing that depends on Scarf
 - Your IP address will be used to look up any available company information. The
-  IP address itself will be subsequently deleted
-  
+  IP address itself will be subsequently deleted.
+- Dependency tree information. Scarf sends the package name and version for
+  certain packages (provided they are not scoped packages, `@org/package-name`,
+  which are assumed to be private):
+  - Packages in the dependency tree that directly depend on
+  Scarf.
+  - Packages that depend on a package that depends on Scarf.
+  - The root package of the dependency tree.
 ### As a user of a package using Scarf, how can I opt out of analytics?
 
 Scarf's analytics help support developers of the open source packages you are using, so 
