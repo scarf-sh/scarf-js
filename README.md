@@ -66,7 +66,6 @@ haven't explictly opted in or out.
 ### As a user of a package using Scarf, what information does Scarf send about me?
 
 - The operating system you are using
-- The version of the package you're installing that depends on Scarf
 - Your IP address will be used to look up any available company information. The
   IP address itself will be subsequently deleted.
 - Dependency tree information. Scarf sends the package name and version for
