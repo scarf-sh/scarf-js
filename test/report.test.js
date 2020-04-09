@@ -4,22 +4,22 @@ const fs = require('fs')
 const rateLimitKey = 'testKey'
 const tmpFileReturnVal = './scarf-js-test-history.log'
 
+function wipeLogHistoryIfPresent() {
+  try {
+    fs.unlinkSync(tmpFileReturnVal)
+  } catch (e) {}
+}
+
 describe('Reporting tests', () => {
   beforeAll(() => {
     report.tmpFileName = jest.fn(() => {
       return tmpFileReturnVal
     })
-    try {
-      fs.unlinkSync(tmpFileReturnVal)
-    } catch (e) {}
+    wipeLogHistoryIfPresent()
   })
 
   afterAll(() => {
-    try {
-      fs.unlinkSync(tmpFileReturnVal)
-    } catch (e) {
-      console.error(e)
-    }
+    wipeLogHistoryIfPresent()
   })
 
   test('Logging rate limit check', () => {
