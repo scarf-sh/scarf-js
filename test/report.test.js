@@ -37,8 +37,8 @@ describe('Reporting tests', () => {
     const depInfo = {
       scarf: { name: '@scarf/scarf', version: '0.0.1', path: '/local/directory/deeper/deeper' },
       parent: { name: 'scarfed-library', version: '1.0.0', scarfSettings: { defaultOptIn: true }, path: '/local/directory/deeper/' },
-      grandparent: { name: rootPackageName, version: '1.0.0', path: '/local/directory/' },
-      rootPackage: { name: rootPackageName, version: '1.0.0', packageJsonPath: '/local/directory', path: '/local/directory' }
+      grandparent: { name: rootPackageName, version: rootPackageVersion, path: '/local/directory/' },
+      rootPackage: { name: rootPackageName, version: rootPackageVersion, packageJsonPath: '/local/directory', path: '/local/directory' }
     }
 
     const redacted = report.redactSensitivePackageInfo(depInfo)
