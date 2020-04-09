@@ -4,7 +4,7 @@ const fs = require('fs')
 const rateLimitKey = 'testKey'
 const tmpFileReturnVal = './scarf-js-test-history.log'
 
-function wipeLogHistoryIfPresent() {
+function wipeLogHistoryIfPresent () {
   try {
     fs.unlinkSync(tmpFileReturnVal)
   } catch (e) {}
