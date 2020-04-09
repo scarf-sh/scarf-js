@@ -3,12 +3,27 @@ const os = require('os')
 const exec = require('child_process').exec
 const localDevPort = process.env.SCARF_LOCAL_PORT
 const https = localDevPort ? require('http') : require('https')
-const fs = require('fs').promises
+const fs = require('fs')
+const fsAsync = fs.promises
 
 const scarfHost = localDevPort ? 'localhost' : 'scarf.sh'
 const scarfLibName = '@scarf/scarf'
 
 const rootPath = path.resolve(__dirname).split('node_modules')[0]
+// Pulled into a function for test mocking
+function tmpFileName () {
+  // throttle per user
+  const username = os.userInfo().username
+  return path.join(os.tmpdir(), `scarf-js-history-${username}.log`)
+}
+
+const userMessageThrottleTime = 1000 * 60 // 1 minute
+
+// In general, these keys should never change to remain backwards compatible
+// with previous versions of Scarf. If we need to update them, we'll need to
+// make sure we can read the previous values as well
+const optedInLogRateLimitKey = 'optedInLastLog'
+const optedOutLogRateLimitKey = 'optedOutLastLog'
 
 const makeDefaultSettings = () => {
   return {
@@ -22,7 +37,7 @@ function logIfVerbose (toLog, stream) {
   }
 }
 
-// SCARF_NO_ANALYTICS was the orginal variable, we'll get rid of it eventually
+// SCARF_NO_ANALYTICS was the original variable, we'll get rid of it eventually
 const userHasOptedOut = (rootPackage) => {
   return (rootPackage && rootPackage.scarfSettings && rootPackage.scarfSettings.enabled === false) ||
     (process.env.SCARF_ANALYTICS === 'false' || process.env.SCARF_NO_ANALYTICS === 'true')
@@ -112,7 +127,7 @@ async function reportPostInstall () {
       }
 
       if (!userHasOptedIn(rootPackage)) {
-        console.log(`
+        rateLimitedUserLog(optedInLogRateLimitKey, `
     The dependency '${dependencyInfo.parent.name}' is tracking installation
     statistics using Scarf (https://scarf.sh), which helps open-source developers
     fund and maintain their projects. Scarf securely logs basic installation
@@ -127,8 +142,11 @@ async function reportPostInstall () {
       if (!userHasOptedIn(rootPackage)) {
         if (!userHasOptedOut(rootPackage)) {
           // We'll only print the 'please opt in' text if the user hasn't
-          // already opted out
-          console.log(`
+          // already opted out, and our logging rate limit hasn't been reached
+          if (hasHitRateLimit(optedOutLogRateLimitKey, getRateLimitedLogHistory())) {
+            return reject(new Error('Analytics are opt-out by default, but rate limit already hit for prompting opt-in.'))
+          }
+          rateLimitedUserLog(optedOutLogRateLimitKey, `
     The dependency '${dependencyInfo.parent.name}' would like to track
     installation statistics using Scarf (https://scarf.sh), which helps
     open-source developers fund and maintain their projects. Reporting is disabled
@@ -145,6 +163,7 @@ async function reportPostInstall () {
 
           const timeout1 = setTimeout(() => {
             console.log('')
+            console.log('No opt in received, skipping analytics')
             reject(new Error('Timeout waiting for user opt in'))
           }, 7000)
 
@@ -300,12 +319,54 @@ function rootPackageDepInfo (packageInfo) {
 }
 
 async function savePreferencesToRootPackage (path, optIn) {
-  const packageJsonString = await fs.readFile(path)
+  const packageJsonString = await fsAsync.readFile(path)
   const parsed = JSON.parse(packageJsonString)
   parsed.scarfSettings = {
     enabled: optIn
   }
-  await fs.writeFile(path, JSON.stringify(parsed, null, 2))
+  await fsAsync.writeFile(path, JSON.stringify(parsed, null, 2))
+}
+
+/*
+  If Scarf-js appears in many different spots in a package's dependency tree, we
+  want to avoid spamming the user with the same message informing them of
+  Scarf's analytics. Rate limited logs will record timestamps of logging in a
+  temp file. Before logging something to the user, we will verify we're not over
+  the rate limit.
+*/
+function rateLimitedUserLog (rateLimitKey, toLog) {
+  const history = getRateLimitedLogHistory()
+  if (!hasHitRateLimit(rateLimitKey, history)) {
+    writeCurrentTimeToLogHistory(rateLimitKey, history)
+    console.log(toLog)
+  } else {
+    logIfVerbose(`[SUPPRESSED USER MESSAGE, RATE LIMIT HIT] ${toLog}`)
+  }
+}
+
+function getRateLimitedLogHistory () {
+  let history
+  try {
+    history = JSON.parse(fs.readFileSync(tmpFileName()))
+  } catch (e) {
+    logIfVerbose(e)
+  }
+  return history || {}
+}
+
+//  Current rate limit: 1/minute
+function hasHitRateLimit (rateLimitKey, history) {
+  if (!history || !history[rateLimitKey]) {
+    return false
+  }
+
+  const lastLog = history[rateLimitKey]
+  return (new Date().getTime() - lastLog) < userMessageThrottleTime
+}
+
+function writeCurrentTimeToLogHistory (rateLimitKey, history) {
+  history[rateLimitKey] = new Date().getTime()
+  fs.writeFileSync(tmpFileName(), JSON.stringify(history))
 }
 
 if (require.main === module) {
