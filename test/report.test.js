@@ -11,13 +11,13 @@ describe('Reporting tests', () => {
     })
     try {
       fs.unlinkSync(tmpFileReturnVal)
-    } catch(e) {}
+    } catch (e) {}
   })
 
   afterAll(() => {
     try {
       fs.unlinkSync(tmpFileReturnVal)
-    } catch(e) {
+    } catch (e) {
       console.error(e)
     }
   })
@@ -35,13 +35,13 @@ describe('Reporting tests', () => {
     const rootPackageVersion = '1.0.0'
 
     const depInfo = {
-      scarf: {name: `@scarf/scarf`, version: '0.0.1', path: '/local/directory/deeper/deeper'},
+      scarf: { name: '@scarf/scarf', version: '0.0.1', path: '/local/directory/deeper/deeper' },
       parent: { name: 'scarfed-library', version: '1.0.0', scarfSettings: { defaultOptIn: true }, path: '/local/directory/deeper/' },
       grandparent: { name: rootPackageName, version: '1.0.0', path: '/local/directory/' },
       rootPackage: { name: rootPackageName, version: '1.0.0', packageJsonPath: '/local/directory', path: '/local/directory' }
     }
 
-    const redacted = report.redactSensitivePackageInfo (depInfo)
+    const redacted = report.redactSensitivePackageInfo(depInfo)
 
     expect(redacted.scarf.path).toBeUndefined()
     expect(redacted.parent.path).toBeUndefined()

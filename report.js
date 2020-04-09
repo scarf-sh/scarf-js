@@ -389,5 +389,5 @@ module.exports = {
   hasHitRateLimit,
   getRateLimitedLogHistory,
   rateLimitedUserLog,
-  tmpFileName,
+  tmpFileName
 }
