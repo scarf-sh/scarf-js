@@ -14,6 +14,12 @@ const tmpFileName = `${os.tmpdir()}/scarf-js-history.log`
 
 const userMessageThrottleTime = 1000 * 60 // 1 minute
 
+// In general, these keys should never change to remain backwards compatible
+// with previous versions of Scarf. If we need to update them, we'll need to
+// make sure we can read the previous values as well
+const optedInLogRateLimitKey = 'optedInLastLog'
+const optedOutLogRateLimitKey = 'optedOutLastLog'
+
 const makeDefaultSettings = () => {
   return {
     defaultOptIn: true
@@ -116,7 +122,7 @@ async function reportPostInstall () {
       }
 
       if (!userHasOptedIn(rootPackage)) {
-        rateLimitedUserLog(`
+        rateLimitedUserLog(optedInLogRateLimitKey, `
     The dependency '${dependencyInfo.parent.name}' is tracking installation
     statistics using Scarf (https://scarf.sh), which helps open-source developers
     fund and maintain their projects. Scarf securely logs basic installation
@@ -132,10 +138,10 @@ async function reportPostInstall () {
         if (!userHasOptedOut(rootPackage)) {
           // We'll only print the 'please opt in' text if the user hasn't
           // already opted out, and our logging rate limit hasn't been reached
-          if (hasHitRateLimit(getRateLimitedLogHistory())) {
+          if (hasHitRateLimit(optedOutLogRateLimitKey, getRateLimitedLogHistory())) {
             return reject(new Error('Analytics are opt-out by default, but rate limit already hit for prompting opt-in.'))
           }
-          rateLimitedUserLog(`
+          rateLimitedUserLog(optedOutLogRateLimitKey, `
     The dependency '${dependencyInfo.parent.name}' would like to track
     installation statistics using Scarf (https://scarf.sh), which helps
     open-source developers fund and maintain their projects. Reporting is disabled
@@ -152,6 +158,7 @@ async function reportPostInstall () {
 
           const timeout1 = setTimeout(() => {
             console.log('')
+            console.log(`No opt in received, skipping analytics`)
             reject(new Error('Timeout waiting for user opt in'))
           }, 7000)
 
@@ -322,10 +329,10 @@ async function savePreferencesToRootPackage (path, optIn) {
   temp file. Before logging something to the user, we will verify we're not over
   the rate limit.
 */
-function rateLimitedUserLog(toLog) {
+function rateLimitedUserLog(rateLimitKey, toLog) {
   const history = getRateLimitedLogHistory()
-  if (!hasHitRateLimit(history)) {
-    writeCurrentTimeToLogHistory(history)
+  if (!hasHitRateLimit(rateLimitKey, history)) {
+    writeCurrentTimeToLogHistory(rateLimitKey, history)
     console.log(toLog)
   } else {
     logIfVerbose(`[SUPPRESSED USER MESSAGE, RATE LIMIT HIT] ${toLog}`)
@@ -339,21 +346,21 @@ function getRateLimitedLogHistory() {
   } catch (e) {
     logIfVerbose(e)
   }
-  return history || {lastRateLimitedLog: null}
+  return history || {}
 }
 
 //  Current rate limit: 1/minute
-function hasHitRateLimit(history) {
-  if (!history || !history.lastRateLimitedLog) {
+function hasHitRateLimit(rateLimitKey, history) {
+  if (!history || !history[rateLimitKey]) {
     return false
   }
 
-  const lastLog = history.lastRateLimitedLog
+  const lastLog = history[rateLimitKey]
   return (new Date().getTime() - lastLog) < userMessageThrottleTime
 }
 
-function writeCurrentTimeToLogHistory(history) {
-  history.lastRateLimitedLog = new Date().getTime()
+function writeCurrentTimeToLogHistory(rateLimitKey, history) {
+  history[rateLimitKey] = new Date().getTime()
   fs.writeFileSync(tmpFileName, JSON.stringify(history))
 }
 
