@@ -158,7 +158,7 @@ async function reportPostInstall () {
 
           const timeout1 = setTimeout(() => {
             console.log('')
-            console.log(`No opt in received, skipping analytics`)
+            console.log('No opt in received, skipping analytics')
             reject(new Error('Timeout waiting for user opt in'))
           }, 7000)
 
@@ -329,7 +329,7 @@ async function savePreferencesToRootPackage (path, optIn) {
   temp file. Before logging something to the user, we will verify we're not over
   the rate limit.
 */
-function rateLimitedUserLog(rateLimitKey, toLog) {
+function rateLimitedUserLog (rateLimitKey, toLog) {
   const history = getRateLimitedLogHistory()
   if (!hasHitRateLimit(rateLimitKey, history)) {
     writeCurrentTimeToLogHistory(rateLimitKey, history)
@@ -339,7 +339,7 @@ function rateLimitedUserLog(rateLimitKey, toLog) {
   }
 }
 
-function getRateLimitedLogHistory() {
+function getRateLimitedLogHistory () {
   let history
   try {
     history = JSON.parse(fs.readFileSync(tmpFileName))
@@ -350,7 +350,7 @@ function getRateLimitedLogHistory() {
 }
 
 //  Current rate limit: 1/minute
-function hasHitRateLimit(rateLimitKey, history) {
+function hasHitRateLimit (rateLimitKey, history) {
   if (!history || !history[rateLimitKey]) {
     return false
   }
@@ -359,7 +359,7 @@ function hasHitRateLimit(rateLimitKey, history) {
   return (new Date().getTime() - lastLog) < userMessageThrottleTime
 }
 
-function writeCurrentTimeToLogHistory(rateLimitKey, history) {
+function writeCurrentTimeToLogHistory (rateLimitKey, history) {
   history[rateLimitKey] = new Date().getTime()
   fs.writeFileSync(tmpFileName, JSON.stringify(history))
 }
