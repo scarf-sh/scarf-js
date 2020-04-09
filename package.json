@@ -9,7 +9,8 @@
     "url": "git+https://github.com/scarf-sh/scarf-js.git"
   },
   "files": [
-    "report.js"
+    "report.js",
+    "test/*.js"
   ],
   "scripts": {
     "postinstall": "node ./report.js",
@@ -23,6 +24,13 @@
     "standard": "^14.3.1"
   },
   "standard": {
-    "globals": [ "expect", "test" , "jest", "beforeAll", "afterAll", "describe"]
+    "globals": [
+      "expect",
+      "test",
+      "jest",
+      "beforeAll",
+      "afterAll",
+      "describe"
+    ]
   }
 }
