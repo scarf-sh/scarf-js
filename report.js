@@ -10,7 +10,12 @@ const scarfHost = localDevPort ? 'localhost' : 'scarf.sh'
 const scarfLibName = '@scarf/scarf'
 
 const rootPath = path.resolve(__dirname).split('node_modules')[0]
-const tmpFileName = `${os.tmpdir()}/scarf-js-history.log`
+// Pulled into a function for test mocking
+function tmpFileName () {
+  // throttle per user
+  const username = os.userInfo().username
+  return path.join(os.tmpdir(), `scarf-js-history-${username}.log`)
+}
 
 const userMessageThrottleTime = 1000 * 60 // 1 minute
 
@@ -342,7 +347,7 @@ function rateLimitedUserLog (rateLimitKey, toLog) {
 function getRateLimitedLogHistory () {
   let history
   try {
-    history = JSON.parse(fs.readFileSync(tmpFileName))
+    history = JSON.parse(fs.readFileSync(tmpFileName()))
   } catch (e) {
     logIfVerbose(e)
   }
@@ -361,7 +366,7 @@ function hasHitRateLimit (rateLimitKey, history) {
 
 function writeCurrentTimeToLogHistory (rateLimitKey, history) {
   history[rateLimitKey] = new Date().getTime()
-  fs.writeFileSync(tmpFileName, JSON.stringify(history))
+  fs.writeFileSync(tmpFileName(), JSON.stringify(history))
 }
 
 if (require.main === module) {
