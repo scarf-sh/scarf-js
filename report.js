@@ -12,6 +12,8 @@ const scarfLibName = '@scarf/scarf'
 const rootPath = path.resolve(__dirname).split('node_modules')[0]
 const tmpFileName = `${os.tmpdir()}/scarf-js-history.log`
 
+const userMessageThrottleTime = 1000 * 60 // 1 minute
+
 const makeDefaultSettings = () => {
   return {
     defaultOptIn: true
@@ -342,13 +344,12 @@ function getRateLimitedLogHistory() {
 
 //  Current rate limit: 1/minute
 function hasHitRateLimit(history) {
-  const threshold = 1000 * 60
   if (!history || !history.lastRateLimitedLog) {
     return false
   }
 
   const lastLog = history.lastRateLimitedLog
-  return (new Date().getTime() - lastLog) < threshold
+  return (new Date().getTime() - lastLog) < userMessageThrottleTime
 }
 
 function writeCurrentTimeToLogHistory(history) {
