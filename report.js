@@ -258,9 +258,9 @@ async function reportPostInstall () {
 // the root package being installed by the user
 //
 // [{
-//   scarfPackage: {name: `@scarf/scarf`, version: '0.0.1'},
-//   parentPackage: { name: 'scarfed-library', version: '1.0.0', scarfSettings: { defaultOptIn: true } },
-//   grandparentPackage: { name: 'scarfed-lib-consumer', version: '1.0.0' }
+//   scarf: {name: `@scarf/scarf`, version: '0.0.1'},
+//   parent: { name: 'scarfed-library', version: '1.0.0', scarfSettings: { defaultOptIn: true } },
+//   grandparent: { name: 'scarfed-lib-consumer', version: '1.0.0' }
 // }]
 function findScarfInSubDepTree (pathToDep, deps) {
   const depNames = Object.keys(deps || {})
@@ -347,7 +347,7 @@ function rateLimitedUserLog (rateLimitKey, toLog) {
 function getRateLimitedLogHistory () {
   let history
   try {
-    history = JSON.parse(fs.readFileSync(tmpFileName()))
+    history = JSON.parse(fs.readFileSync(module.exports.tmpFileName()))
   } catch (e) {
     logIfVerbose(e)
   }
@@ -366,7 +366,7 @@ function hasHitRateLimit (rateLimitKey, history) {
 
 function writeCurrentTimeToLogHistory (rateLimitKey, history) {
   history[rateLimitKey] = new Date().getTime()
-  fs.writeFileSync(tmpFileName(), JSON.stringify(history))
+  fs.writeFileSync(module.exports.tmpFileName(), JSON.stringify(history))
 }
 
 if (require.main === module) {
@@ -382,4 +382,12 @@ if (require.main === module) {
     logIfVerbose(`\n\nTop level error: ${e}`, console.error)
     process.exit(0)
   }
+}
+
+module.exports = {
+  redactSensitivePackageInfo,
+  hasHitRateLimit,
+  getRateLimitedLogHistory,
+  rateLimitedUserLog,
+  tmpFileName,
 }
