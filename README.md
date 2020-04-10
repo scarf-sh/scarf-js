@@ -60,22 +60,24 @@ haven't explictly opted in or out.
 
 ### What information does Scarf provide me as a package author?
 
-- Basic system information of your users
-- Company information of your users
-- Dependency tree information of packages that depend on your library
+- Understanding your user-base
+  - Which companies are using your package?
+  - Is your project growing or shrinking? Where? On which platforms?
+- Which versions of your package are being used?
 
 ### As a user of a package using Scarf, what information does Scarf send about me?
 
 - The operating system you are using
 - Your IP address will be used to look up any available company information. The
   IP address itself will be subsequently deleted.
-- Dependency tree information. Scarf sends the package name and version for
+- Limited dependency tree information. Scarf sends the package name and version for
   certain packages (provided they are not scoped packages, `@org/package-name`,
   which are assumed to be private):
   - Packages in the dependency tree that directly depend on
   Scarf.
   - Packages that depend on a package that depends on Scarf.
   - The root package of the dependency tree.
+  
 ### As a user of a package using Scarf, how can I opt out of analytics?
 
 Scarf's analytics help support developers of the open source packages you are
