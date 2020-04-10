@@ -2,6 +2,7 @@
 
 ![](https://github.com/scarf-sh/scarf-js/workflows/CI/badge.svg)
 [![npm version](https://badge.fury.io/js/%40scarf%2Fscarf.svg)](https://badge.fury.io/js/%40scarf%2Fscarf)
+![](https://img.shields.io/npm/dw/@scarf/scarf)
 
 Scarf is like Google Analytics for your npm packages. By sending some basic
 details after installation, this package can help you can gain insights into how
