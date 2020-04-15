@@ -77,36 +77,41 @@ async function getDependencyInfo () {
         return reject(new Error(`Scarf received an error from npm -ls: ${error}`))
       }
 
-      const output = JSON.parse(stdout)
+      try {
+        const output = JSON.parse(stdout)
 
-      let depsToScarf = findScarfInFullDependencyTree(output)
-      depsToScarf = depsToScarf.filter(depChain => depChain.length > 2)
-      if (depsToScarf.length === 0) {
-        return reject(new Error('No Scarf parent package found'))
-      }
-
-      const rootPackageDetails = rootPackageDepInfo(output)
-
-      const dependencyInfo = depsToScarf.map(depChain => {
-        return {
-          scarf: depChain[depChain.length - 1],
-          parent: depChain[depChain.length - 2],
-          grandparent: depChain[depChain.length - 3], // might be undefined
-          rootPackage: rootPackageDetails
+        let depsToScarf = findScarfInFullDependencyTree(output)
+        depsToScarf = depsToScarf.filter(depChain => depChain.length > 2)
+        if (depsToScarf.length === 0) {
+          return reject(new Error('No Scarf parent package found'))
         }
-      })
 
-      dependencyInfo.forEach(d => {
-        d.parent.scarfSettings = Object.assign(makeDefaultSettings(), d.parent.scarfSettings || {})
-      })
+        const rootPackageDetails = rootPackageDepInfo(output)
 
-      // Here, we find the dependency chain that corresponds to the scarf package we're currently in
-      const dependencyToReport = dependencyInfo.find(dep => (dep.scarf.path === __dirname))
-      if (!dependencyToReport) {
-        return reject(new Error(`Couldn't find dependency info for path ${__dirname}`))
+        const dependencyInfo = depsToScarf.map(depChain => {
+          return {
+            scarf: depChain[depChain.length - 1],
+            parent: depChain[depChain.length - 2],
+            grandparent: depChain[depChain.length - 3], // might be undefined
+            rootPackage: rootPackageDetails
+          }
+        })
+
+        dependencyInfo.forEach(d => {
+          d.parent.scarfSettings = Object.assign(makeDefaultSettings(), d.parent.scarfSettings || {})
+        })
+
+        // Here, we find the dependency chain that corresponds to the scarf package we're currently in
+        const dependencyToReport = dependencyInfo.find(dep => (dep.scarf.path === __dirname))
+        if (!dependencyToReport) {
+          return reject(new Error(`Couldn't find dependency info for path ${__dirname}`))
+        }
+
+        return resolve(dependencyToReport)
+      } catch (err) {
+        logIfVerbose(err, console.error)
+        return reject(err)
       }
-
-      return resolve(dependencyToReport)
     })
   })
 }
@@ -196,11 +201,16 @@ async function reportPostInstall () {
 
             stdin.removeAllListeners('data')
             stdin.on('data', async function (data) {
-              const savePreference = data.trim().toLowerCase() === 'y'
-              if (savePreference) {
-                await savePreferencesToRootPackage(dependencyInfo.rootPackage.packageJsonPath, enabled)
+              try {
+                const savePreference = data.trim().toLowerCase() === 'y'
+                if (savePreference) {
+                  await savePreferencesToRootPackage(dependencyInfo.rootPackage.packageJsonPath, enabled)
+                }
+                return afterUserInput(enabled, savePreference)
+              } catch (err) {
+                logIfVerbose(err, console.error)
+                return reject(err)
               }
-              return afterUserInput(enabled, savePreference)
             })
           })
         }
