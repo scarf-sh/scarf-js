@@ -241,7 +241,8 @@ async function reportPostInstall () {
     headers: {
       'Content-Type': 'application/json',
       'Content-Length': data.length
-    }
+    },
+    timeout: execTimeout
   }
 
   if (scarfApiToken) {
@@ -256,6 +257,11 @@ async function reportPostInstall () {
     })
 
     req.on('error', error => {
+      logIfVerbose(error, console.error)
+      reject(error)
+    })
+
+    req.on('timeout', error => {
       logIfVerbose(error, console.error)
       reject(error)
     })
