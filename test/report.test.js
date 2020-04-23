@@ -3,6 +3,7 @@ const fs = require('fs')
 
 const rateLimitKey = 'testKey'
 const tmpFileReturnVal = './scarf-js-test-history.log'
+const scarfExecPath = '/path/scarfed-lib-consumer-consumer/node_modules/@scarf/scarf'
 
 function wipeLogHistoryIfPresent () {
   try {
@@ -14,6 +15,10 @@ describe('Reporting tests', () => {
   beforeAll(() => {
     report.tmpFileName = jest.fn(() => {
       return tmpFileReturnVal
+    })
+    debugger
+    report.dirName = jest.fn(() => {
+      return scarfExecPath
     })
     wipeLogHistoryIfPresent()
   })
@@ -62,5 +67,21 @@ describe('Reporting tests', () => {
 
     expect(redacted.parent.name).toBe('scarfed-library')
     expect(redacted.parent.version).toBe('1.0.0')
+  })
+
+  test('Intermediate packages can disabled Scarf for their dependents', async () => {
+    const exampleLsOutput = fs.readFileSync('./test/example-ls-output.json')
+    await expect(new Promise((resolve, reject) => {
+      return report.processDependencyTreeOutput(resolve, reject)(null, exampleLsOutput, null)
+    })).rejects.toEqual(new Error(`Scarf has been disabled via a package.json in the dependency chain.`))
+    const parsedLsOutput = JSON.parse(exampleLsOutput)
+    delete(parsedLsOutput.dependencies['scarfed-lib-consumer'].scarfSettings)
+
+    await new Promise((resolve, reject) => {
+      return report.processDependencyTreeOutput(resolve, reject)(null, JSON.stringify(parsedLsOutput), null)
+    }).then(output => {
+      expect(output).toBeTruthy()
+      expect(output.anyInChainDisabled).toBe(false)
+    })
   })
 })
