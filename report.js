@@ -18,6 +18,7 @@ function tmpFileName () {
 }
 
 const userMessageThrottleTime = 1000 * 60 // 1 minute
+const execTimeout = 3000
 
 // In general, these keys should never change to remain backwards compatible
 // with previous versions of Scarf. If we need to update them, we'll need to
@@ -72,7 +73,7 @@ function redactSensitivePackageInfo (dependencyInfo) {
 
 async function getDependencyInfo () {
   return new Promise((resolve, reject) => {
-    exec(`cd ${rootPath} && npm ls @scarf/scarf --json --long`, function (error, stdout, stderr) {
+    exec(`cd ${rootPath} && npm ls @scarf/scarf --json --long`, { timeout: execTimeout }, function (error, stdout, stderr) {
       if (error) {
         return reject(new Error(`Scarf received an error from npm -ls: ${error}`))
       }
