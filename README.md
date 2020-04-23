@@ -107,7 +107,7 @@ Either route will disable Scarf for all packages.
 ### Developing
 
 Setting the environment variable `SCARF_LOCAL_PORT=8080` will configure Scarf to
-use http://localhost:${SCARF_LOCAL_PORT} as the analytics endpoint host.
+use http://localhost:8080 as the analytics endpoint host.
 
 ### Future work
 
