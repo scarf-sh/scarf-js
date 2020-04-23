@@ -76,9 +76,8 @@ function redactSensitivePackageInfo (dependencyInfo) {
   return dependencyInfo
 }
 
-function processDependencyTreeOutput(resolve, reject) {
+function processDependencyTreeOutput (resolve, reject) {
   return function (error, stdout, stderr) {
-    debugger
     if (error) {
       return reject(new Error(`Scarf received an error from npm -ls: ${error}`))
     }
@@ -102,7 +101,7 @@ function processDependencyTreeOutput(resolve, reject) {
           rootPackage: rootPackageDetails,
           anyInChainDisabled: depChain.some(dep => {
             return (dep.scarfSettings || {}).enabled === false
-          }),
+          })
         }
       })
 
@@ -119,7 +118,7 @@ function processDependencyTreeOutput(resolve, reject) {
       // If any intermediate dependency in the chain of deps that leads to scarf
       // has disabled Scarf, we must respect that setting
       if (dependencyToReport.anyInChainDisabled) {
-        return reject(new Error(`Scarf has been disabled via a package.json in the dependency chain.`))
+        return reject(new Error('Scarf has been disabled via a package.json in the dependency chain.'))
       }
 
       return resolve(dependencyToReport)
@@ -427,5 +426,5 @@ module.exports = {
   rateLimitedUserLog,
   tmpFileName,
   dirName,
-  processDependencyTreeOutput,
+  processDependencyTreeOutput
 }

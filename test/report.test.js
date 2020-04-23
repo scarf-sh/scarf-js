@@ -16,7 +16,6 @@ describe('Reporting tests', () => {
     report.tmpFileName = jest.fn(() => {
       return tmpFileReturnVal
     })
-    debugger
     report.dirName = jest.fn(() => {
       return scarfExecPath
     })
@@ -69,13 +68,13 @@ describe('Reporting tests', () => {
     expect(redacted.parent.version).toBe('1.0.0')
   })
 
-  test('Intermediate packages can disabled Scarf for their dependents', async () => {
+  test('Intermediate packages can disable Scarf for their dependents', async () => {
     const exampleLsOutput = fs.readFileSync('./test/example-ls-output.json')
     await expect(new Promise((resolve, reject) => {
       return report.processDependencyTreeOutput(resolve, reject)(null, exampleLsOutput, null)
-    })).rejects.toEqual(new Error(`Scarf has been disabled via a package.json in the dependency chain.`))
+    })).rejects.toEqual(new Error('Scarf has been disabled via a package.json in the dependency chain.'))
     const parsedLsOutput = JSON.parse(exampleLsOutput)
-    delete(parsedLsOutput.dependencies['scarfed-lib-consumer'].scarfSettings)
+    delete (parsedLsOutput.dependencies['scarfed-lib-consumer'].scarfSettings)
 
     await new Promise((resolve, reject) => {
       return report.processDependencyTreeOutput(resolve, reject)(null, JSON.stringify(parsedLsOutput), null)
