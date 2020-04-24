@@ -17,6 +17,11 @@ function tmpFileName () {
   return path.join(os.tmpdir(), `scarf-js-history-${username}.log`)
 }
 
+// Pulled into a function for test mocking
+function dirName () {
+  return __dirname
+}
+
 const userMessageThrottleTime = 1000 * 60 // 1 minute
 const execTimeout = 3000
 
@@ -71,49 +76,62 @@ function redactSensitivePackageInfo (dependencyInfo) {
   return dependencyInfo
 }
 
+function processDependencyTreeOutput (resolve, reject) {
+  return function (error, stdout, stderr) {
+    if (error) {
+      return reject(new Error(`Scarf received an error from npm -ls: ${error}`))
+    }
+
+    try {
+      const output = JSON.parse(stdout)
+
+      let depsToScarf = findScarfInFullDependencyTree(output)
+      depsToScarf = depsToScarf.filter(depChain => depChain.length > 2)
+      if (depsToScarf.length === 0) {
+        return reject(new Error('No Scarf parent package found'))
+      }
+
+      const rootPackageDetails = rootPackageDepInfo(output)
+
+      const dependencyInfo = depsToScarf.map(depChain => {
+        return {
+          scarf: depChain[depChain.length - 1],
+          parent: depChain[depChain.length - 2],
+          grandparent: depChain[depChain.length - 3],
+          rootPackage: rootPackageDetails,
+          anyInChainDisabled: depChain.some(dep => {
+            return (dep.scarfSettings || {}).enabled === false
+          })
+        }
+      })
+
+      dependencyInfo.forEach(d => {
+        d.parent.scarfSettings = Object.assign(makeDefaultSettings(), d.parent.scarfSettings || {})
+      })
+
+      // Here, we find the dependency chain that corresponds to the scarf package we're currently in
+      const dependencyToReport = dependencyInfo.find(dep => (dep.scarf.path === module.exports.dirName()))
+      if (!dependencyToReport) {
+        return reject(new Error(`Couldn't find dependency info for path ${module.exports.dirName()}`))
+      }
+
+      // If any intermediate dependency in the chain of deps that leads to scarf
+      // has disabled Scarf, we must respect that setting
+      if (dependencyToReport.anyInChainDisabled) {
+        return reject(new Error('Scarf has been disabled via a package.json in the dependency chain.'))
+      }
+
+      return resolve(dependencyToReport)
+    } catch (err) {
+      logIfVerbose(err, console.error)
+      return reject(err)
+    }
+  }
+}
+
 async function getDependencyInfo () {
   return new Promise((resolve, reject) => {
-    exec(`cd ${rootPath} && npm ls @scarf/scarf --json --long`, { timeout: execTimeout }, function (error, stdout, stderr) {
-      if (error) {
-        return reject(new Error(`Scarf received an error from npm -ls: ${error}`))
-      }
-
-      try {
-        const output = JSON.parse(stdout)
-
-        let depsToScarf = findScarfInFullDependencyTree(output)
-        depsToScarf = depsToScarf.filter(depChain => depChain.length > 2)
-        if (depsToScarf.length === 0) {
-          return reject(new Error('No Scarf parent package found'))
-        }
-
-        const rootPackageDetails = rootPackageDepInfo(output)
-
-        const dependencyInfo = depsToScarf.map(depChain => {
-          return {
-            scarf: depChain[depChain.length - 1],
-            parent: depChain[depChain.length - 2],
-            grandparent: depChain[depChain.length - 3], // might be undefined
-            rootPackage: rootPackageDetails
-          }
-        })
-
-        dependencyInfo.forEach(d => {
-          d.parent.scarfSettings = Object.assign(makeDefaultSettings(), d.parent.scarfSettings || {})
-        })
-
-        // Here, we find the dependency chain that corresponds to the scarf package we're currently in
-        const dependencyToReport = dependencyInfo.find(dep => (dep.scarf.path === __dirname))
-        if (!dependencyToReport) {
-          return reject(new Error(`Couldn't find dependency info for path ${__dirname}`))
-        }
-
-        return resolve(dependencyToReport)
-      } catch (err) {
-        logIfVerbose(err, console.error)
-        return reject(err)
-      }
-    })
+    exec(`cd ${rootPath} && npm ls @scarf/scarf --json --long`, { timeout: execTimeout }, processDependencyTreeOutput(resolve, reject))
   })
 }
 
@@ -406,5 +424,7 @@ module.exports = {
   hasHitRateLimit,
   getRateLimitedLogHistory,
   rateLimitedUserLog,
-  tmpFileName
+  tmpFileName,
+  dirName,
+  processDependencyTreeOutput
 }

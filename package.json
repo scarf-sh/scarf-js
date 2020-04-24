@@ -10,7 +10,7 @@
   },
   "files": [
     "report.js",
-    "test/*.js"
+    "test/*"
   ],
   "scripts": {
     "postinstall": "node ./report.js",
