@@ -17,7 +17,7 @@
     "test": "jest"
   },
   "author": "Scarf Systems",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "devDependencies": {
     "jest": "^25.3.0",
     "minimist": "^1.2.2",
