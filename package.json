@@ -1,6 +1,6 @@
 {
   "name": "@scarf/scarf",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Scarf is like Google Analytics for your npm packages. Gain insights into how your packages are installed and used, and by which companies.",
   "main": "report.js",
   "homepage": "https://github.com/scarf-sh/scarf-js",
