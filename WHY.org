@@ -106,6 +106,6 @@ is, there's something you can do to make things better for everyone!
 
 If you're interested in adding Scarf to your npm package or learning more:
 
-- Scarf homepage: [[https://scarf.sh/library]]
+- Scarf homepage: [[https://scarf.sh]]
 - GitHub: [[https://github.com/scarf-sh/scarf-js][https://github.com/scarf-sh/scarf-js]]
 - npm: [[https://www.npmjs.com/package/@scarf/scarf][https://www.npmjs.com/package/@scarf/scarf]]
