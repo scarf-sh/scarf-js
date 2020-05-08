@@ -161,7 +161,7 @@ async function reportPostInstall () {
   const rootPackage = dependencyInfo.rootPackage
 
   if (!userHasOptedIn(rootPackage) && isYarn()) {
-    return Promise.reject(new Error('Package manager is yarn, Scarf is unable to inform user of analytics. Aborting.'))
+    return Promise.reject(new Error('Package manager is yarn. scarf-js is unable to inform user of analytics. Aborting.'))
   }
 
   await new Promise((resolve, reject) => {
@@ -173,7 +173,7 @@ async function reportPostInstall () {
       if (!userHasOptedIn(rootPackage)) {
         rateLimitedUserLog(optedInLogRateLimitKey, `
     The dependency '${dependencyInfo.parent.name}' is tracking installation
-    statistics using Scarf (https://scarf.sh), which helps open-source developers
+    statistics using scarf-js (https://scarf.sh), which helps open-source developers
     fund and maintain their projects. Scarf securely logs basic installation
     details when this package is installed. The Scarf npm library is open source
     and permissively licensed at https://github.com/scarf-sh/scarf-js. For more
@@ -192,7 +192,7 @@ async function reportPostInstall () {
           }
           rateLimitedUserLog(optedOutLogRateLimitKey, `
     The dependency '${dependencyInfo.parent.name}' would like to track
-    installation statistics using Scarf (https://scarf.sh), which helps
+    installation statistics using scarf-js (https://scarf.sh), which helps
     open-source developers fund and maintain their projects. Reporting is disabled
     by default for this package. When enabled, Scarf securely logs basic
     installation details when this package is installed. The Scarf npm library is
