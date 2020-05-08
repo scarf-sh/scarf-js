@@ -67,7 +67,7 @@ function redactSensitivePackageInfo (dependencyInfo) {
     dependencyInfo.grandparent.version = privateVersionRewrite
   }
   if (dependencyInfo.rootPackage && dependencyInfo.rootPackage.name.match(scopedRegex)) {
-    dependencyInfo.rootPackage.name = privateVersionRewrite
+    dependencyInfo.rootPackage.name = privatePackageRewrite
     dependencyInfo.rootPackage.version = privateVersionRewrite
   }
   delete (dependencyInfo.rootPackage.packageJsonPath)

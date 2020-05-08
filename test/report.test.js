@@ -53,10 +53,8 @@ describe('Reporting tests', () => {
     expect(redacted.rootPackage.path).toBeUndefined()
     expect(redacted.rootPackage.packageJsonPath).toBeUndefined()
 
-    expect(redacted.rootPackage.name).not.toContain('org')
-    expect(redacted.rootPackage.name).not.toContain('scarfed-lib-consumer')
-    expect(redacted.grandparent.name).not.toContain('org')
-    expect(redacted.grandparent.name).not.toContain('scarfed-lib-consumer')
+    expect(redacted.rootPackage.name).toBe('@private/private')
+    expect(redacted.grandparent.name).toBe('@private/private')
 
     expect(redacted.rootPackage.version).toBe('0')
     expect(redacted.grandparent.version).toBe('0')
