@@ -434,7 +434,7 @@ module.exports = {
   processDependencyTreeOutput,
   npmExecPath,
   getDependencyInfo,
-  reportPostInstall,
+  reportPostInstall
 }
 
 if (require.main === module) {
@@ -451,4 +451,3 @@ if (require.main === module) {
     process.exit(0)
   }
 }
-
