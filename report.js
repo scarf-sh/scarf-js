@@ -22,6 +22,10 @@ function dirName () {
   return __dirname
 }
 
+function npmExecPath () {
+  return process.env.npm_execpath
+}
+
 const userMessageThrottleTime = 1000 * 60 // 1 minute
 const execTimeout = 3000
 
@@ -76,10 +80,21 @@ function redactSensitivePackageInfo (dependencyInfo) {
   return dependencyInfo
 }
 
+/*
+  Scarf-js is automatically disabled when being run inside of a yarn install.
+  The `npm_execpath` environment variable tells us which package manager is
+  running our install
+ */
+function isYarn () {
+  const execPath = module.exports.npmExecPath() || ''
+  return ['yarn', 'yarn.js', 'yarnpkg', 'yarn.cmd', 'yarnpkg.cmd']
+    .some(packageManBinName => execPath.endsWith(packageManBinName))
+}
+
 function processDependencyTreeOutput (resolve, reject) {
   return function (error, stdout, stderr) {
-    if (error) {
-      return reject(new Error(`Scarf received an error from npm -ls: ${error}`))
+    if (error && !stdout) {
+      return reject(new Error(`Scarf received an error from npm -ls: ${error} | ${stderr}`))
     }
 
     try {
@@ -116,8 +131,8 @@ function processDependencyTreeOutput (resolve, reject) {
       }
 
       // If any intermediate dependency in the chain of deps that leads to scarf
-      // has disabled Scarf, we must respect that setting
-      if (dependencyToReport.anyInChainDisabled) {
+      // has disabled Scarf, we must respect that setting unless the user overrides it.
+      if (dependencyToReport.anyInChainDisabled && !userHasOptedIn(dependencyToReport.rootPackage)) {
         return reject(new Error('Scarf has been disabled via a package.json in the dependency chain.'))
       }
 
@@ -137,12 +152,17 @@ async function getDependencyInfo () {
 
 async function reportPostInstall () {
   const scarfApiToken = process.env.SCARF_API_TOKEN
-  const dependencyInfo = await getDependencyInfo()
+
+  const dependencyInfo = await module.exports.getDependencyInfo()
   if (!dependencyInfo.parent || !dependencyInfo.parent.name) {
     return Promise.reject(new Error('No parent, nothing to report'))
   }
 
   const rootPackage = dependencyInfo.rootPackage
+
+  if (!userHasOptedIn(rootPackage) && isYarn()) {
+    return Promise.reject(new Error('Package manager is yarn, Scarf is unable to inform user of analytics. Aborting.'))
+  }
 
   await new Promise((resolve, reject) => {
     if (dependencyInfo.parent.scarfSettings.defaultOptIn) {
@@ -426,5 +446,8 @@ module.exports = {
   rateLimitedUserLog,
   tmpFileName,
   dirName,
-  processDependencyTreeOutput
+  processDependencyTreeOutput,
+  npmExecPath,
+  getDependencyInfo,
+  reportPostInstall
 }

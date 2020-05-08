@@ -70,9 +70,11 @@ describe('Reporting tests', () => {
 
   test('Intermediate packages can disable Scarf for their dependents', async () => {
     const exampleLsOutput = fs.readFileSync('./test/example-ls-output.json')
+
     await expect(new Promise((resolve, reject) => {
       return report.processDependencyTreeOutput(resolve, reject)(null, exampleLsOutput, null)
     })).rejects.toEqual(new Error('Scarf has been disabled via a package.json in the dependency chain.'))
+
     const parsedLsOutput = JSON.parse(exampleLsOutput)
     delete (parsedLsOutput.dependencies['scarfed-lib-consumer'].scarfSettings)
 
@@ -83,4 +85,45 @@ describe('Reporting tests', () => {
       expect(output.anyInChainDisabled).toBe(false)
     })
   })
+
+  test('Disable when package manager is yarn', async () => {
+    const parsedLsOutput = dependencyTreeScarfEnabled()
+
+    await new Promise((resolve, reject) => {
+      return report.processDependencyTreeOutput(resolve, reject)(null, JSON.stringify(parsedLsOutput), null)
+    }).then(output => {
+      expect(output).toBeTruthy()
+      expect(output.anyInChainDisabled).toBe(false)
+    })
+
+    // Simulate a yarn install by mocking the env variable npm_execpath
+    // leading to a yarn executable
+    report.npmExecPath = jest.fn(() => {
+      return '/usr/local/lib/node_modules/yarn/bin/yarn.js'
+    })
+
+    report.getDependencyInfo = jest.fn(() => {
+      return Promise.resolve({
+        scarf: { name: '@scarf/scarf', version: '0.0.1' },
+        parent: { name: 'scarfed-library', version: '1.0.0', scarfSettings: { defaultOptIn: true } },
+        grandparent: { name: 'scarfed-lib-consumer', version: '1.0.0' }
+      })
+    })
+
+    try {
+      await report.reportPostInstall()
+      throw new Error("report.reportPostInstall() didn't throw an error")
+    } catch (err) {
+      expect(err.message).toContain('yarn')
+    }
+  })
 })
+
+function dependencyTreeScarfEnabled () {
+  const exampleLsOutput = fs.readFileSync('./test/example-ls-output.json')
+
+  const parsedLsOutput = JSON.parse(exampleLsOutput)
+  delete (parsedLsOutput.dependencies['scarfed-lib-consumer'].scarfSettings)
+
+  return parsedLsOutput
+}
