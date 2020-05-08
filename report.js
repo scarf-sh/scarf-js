@@ -424,6 +424,19 @@ function writeCurrentTimeToLogHistory (rateLimitKey, history) {
   fs.writeFileSync(module.exports.tmpFileName(), JSON.stringify(history))
 }
 
+module.exports = {
+  redactSensitivePackageInfo,
+  hasHitRateLimit,
+  getRateLimitedLogHistory,
+  rateLimitedUserLog,
+  tmpFileName,
+  dirName,
+  processDependencyTreeOutput,
+  npmExecPath,
+  getDependencyInfo,
+  reportPostInstall,
+}
+
 if (require.main === module) {
   try {
     reportPostInstall().catch(e => {
@@ -439,15 +452,3 @@ if (require.main === module) {
   }
 }
 
-module.exports = {
-  redactSensitivePackageInfo,
-  hasHitRateLimit,
-  getRateLimitedLogHistory,
-  rateLimitedUserLog,
-  tmpFileName,
-  dirName,
-  processDependencyTreeOutput,
-  npmExecPath,
-  getDependencyInfo,
-  reportPostInstall
-}
