@@ -22,6 +22,10 @@ function dirName () {
   return __dirname
 }
 
+function npmExecPath () {
+  return process.env.npm_execpath
+}
+
 const userMessageThrottleTime = 1000 * 60 // 1 minute
 const execTimeout = 3000
 
@@ -76,10 +80,21 @@ function redactSensitivePackageInfo (dependencyInfo) {
   return dependencyInfo
 }
 
+/*
+  Scarf-js is automatically disabled when being run inside of a yarn install.
+  The `npm_execpath` environment variable tells us which package manager is
+  running our install
+ */
+function isYarn () {
+  const execPath = module.exports.npmExecPath() || ''
+  return ['yarn', 'yarn.js', 'yarnpkg', 'yarn.cmd', 'yarnpkg.cmd']
+    .some(packageManBinName => execPath.endsWith(packageManBinName))
+}
+
 function processDependencyTreeOutput (resolve, reject) {
   return function (error, stdout, stderr) {
-    if (error) {
-      return reject(new Error(`Scarf received an error from npm -ls: ${error}`))
+    if (error && !stdout) {
+      return reject(new Error(`Scarf received an error from npm -ls: ${error} | ${stderr}`))
     }
 
     try {
@@ -116,8 +131,8 @@ function processDependencyTreeOutput (resolve, reject) {
       }
 
       // If any intermediate dependency in the chain of deps that leads to scarf
-      // has disabled Scarf, we must respect that setting
-      if (dependencyToReport.anyInChainDisabled) {
+      // has disabled Scarf, we must respect that setting unless the user overrides it.
+      if (dependencyToReport.anyInChainDisabled && !userHasOptedIn(dependencyToReport.rootPackage)) {
         return reject(new Error('Scarf has been disabled via a package.json in the dependency chain.'))
       }
 
@@ -137,12 +152,17 @@ async function getDependencyInfo () {
 
 async function reportPostInstall () {
   const scarfApiToken = process.env.SCARF_API_TOKEN
-  const dependencyInfo = await getDependencyInfo()
+
+  const dependencyInfo = await module.exports.getDependencyInfo()
   if (!dependencyInfo.parent || !dependencyInfo.parent.name) {
     return Promise.reject(new Error('No parent, nothing to report'))
   }
 
   const rootPackage = dependencyInfo.rootPackage
+
+  if (!userHasOptedIn(rootPackage) && isYarn()) {
+    return Promise.reject(new Error('Package manager is yarn. scarf-js is unable to inform user of analytics. Aborting.'))
+  }
 
   await new Promise((resolve, reject) => {
     if (dependencyInfo.parent.scarfSettings.defaultOptIn) {
@@ -153,7 +173,7 @@ async function reportPostInstall () {
       if (!userHasOptedIn(rootPackage)) {
         rateLimitedUserLog(optedInLogRateLimitKey, `
     The dependency '${dependencyInfo.parent.name}' is tracking installation
-    statistics using Scarf (https://scarf.sh), which helps open-source developers
+    statistics using scarf-js (https://scarf.sh), which helps open-source developers
     fund and maintain their projects. Scarf securely logs basic installation
     details when this package is installed. The Scarf npm library is open source
     and permissively licensed at https://github.com/scarf-sh/scarf-js. For more
@@ -172,7 +192,7 @@ async function reportPostInstall () {
           }
           rateLimitedUserLog(optedOutLogRateLimitKey, `
     The dependency '${dependencyInfo.parent.name}' would like to track
-    installation statistics using Scarf (https://scarf.sh), which helps
+    installation statistics using scarf-js (https://scarf.sh), which helps
     open-source developers fund and maintain their projects. Reporting is disabled
     by default for this package. When enabled, Scarf securely logs basic
     installation details when this package is installed. The Scarf npm library is
@@ -404,6 +424,19 @@ function writeCurrentTimeToLogHistory (rateLimitKey, history) {
   fs.writeFileSync(module.exports.tmpFileName(), JSON.stringify(history))
 }
 
+module.exports = {
+  redactSensitivePackageInfo,
+  hasHitRateLimit,
+  getRateLimitedLogHistory,
+  rateLimitedUserLog,
+  tmpFileName,
+  dirName,
+  processDependencyTreeOutput,
+  npmExecPath,
+  getDependencyInfo,
+  reportPostInstall
+}
+
 if (require.main === module) {
   try {
     reportPostInstall().catch(e => {
@@ -417,14 +450,4 @@ if (require.main === module) {
     logIfVerbose(`\n\nTop level error: ${e}`, console.error)
     process.exit(0)
   }
-}
-
-module.exports = {
-  redactSensitivePackageInfo,
-  hasHitRateLimit,
-  getRateLimitedLogHistory,
-  rateLimitedUserLog,
-  tmpFileName,
-  dirName,
-  processDependencyTreeOutput
 }
