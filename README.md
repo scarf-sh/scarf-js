@@ -70,13 +70,11 @@ haven't explictly opted in or out.
 - The operating system you are using
 - Your IP address will be used to look up any available company information. The
   IP address itself will be subsequently deleted.
-- Limited dependency tree information. Scarf sends the package name and version for
-  certain packages (provided they are not scoped packages, `@org/package-name`,
-  which are assumed to be private):
-  - Packages in the dependency tree that directly depend on
-  Scarf.
-  - Packages that depend on a package that depends on Scarf.
+- Limited dependency tree information. Scarf sends the name and version of the package(s) that directly depend on scarf-js. Additionally, scarf-js will send SHA256-hashed name and version for the following packages in the dependency tree:
+  - Packages that depend on a package that depends on scarf-js.
   - The root package of the dependency tree.
+This allows Scarf to provide maintainers information about which public packages are using their own, without exposing identifying details of non-public packages.
+  
   
 ### As a user of a package using Scarf, how can I opt out of analytics?
 

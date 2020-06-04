@@ -8,6 +8,8 @@ const fsAsync = fs.promises
 
 const scarfHost = localDevPort ? 'localhost' : 'scarf.sh'
 const scarfLibName = '@scarf/scarf'
+const privatePackageRewrite = '@private/private'
+const privateVersionRewrite = '0'
 
 const rootPath = path.resolve(__dirname).split('node_modules')[0]
 // Pulled into a function for test mocking
@@ -57,25 +59,43 @@ const userHasOptedIn = (rootPackage) => {
   return (rootPackage && rootPackage.scarfSettings && rootPackage.scarfSettings.enabled) || process.env.SCARF_ANALYTICS === 'true'
 }
 
-// We don't send any paths, we don't send any scoped package names or versions
+function hashWithDefault (toHash, defaultReturn) {
+  let crypto
+  try {
+    crypto = require('crypto')
+  } catch (err) {
+    logIfVerbose('node crypto module unavailable')
+  }
+
+  if (crypto && toHash) {
+    return crypto.createHash('sha256').update(toHash, 'utf-8').digest('hex')
+  } else {
+    return defaultReturn
+  }
+}
+
+// We don't send any paths, hash package names and versions
 function redactSensitivePackageInfo (dependencyInfo) {
-  const scopedRegex = /@\S+\//
-  const privatePackageRewrite = '@private/private'
-  const privateVersionRewrite = '0'
-  if (dependencyInfo.grandparent && dependencyInfo.grandparent.name.match(scopedRegex)) {
-    dependencyInfo.grandparent.name = privatePackageRewrite
-    dependencyInfo.grandparent.version = privateVersionRewrite
+  if (dependencyInfo.grandparent && dependencyInfo.grandparent.name) {
+    dependencyInfo.grandparent.nameHash = hashWithDefault(dependencyInfo.grandparent.name, privatePackageRewrite)
+    dependencyInfo.grandparent.versionHash = hashWithDefault(dependencyInfo.grandparent.version, privateVersionRewrite)
   }
-  if (dependencyInfo.rootPackage && dependencyInfo.rootPackage.name.match(scopedRegex)) {
-    dependencyInfo.rootPackage.name = privateVersionRewrite
-    dependencyInfo.rootPackage.version = privateVersionRewrite
+
+  if (dependencyInfo.rootPackage && dependencyInfo.rootPackage.name) {
+    dependencyInfo.rootPackage.nameHash = hashWithDefault(dependencyInfo.rootPackage.name, privatePackageRewrite)
+    dependencyInfo.rootPackage.versionHash = hashWithDefault(dependencyInfo.rootPackage.version, privateVersionRewrite)
   }
+
   delete (dependencyInfo.rootPackage.packageJsonPath)
   delete (dependencyInfo.rootPackage.path)
+  delete (dependencyInfo.rootPackage.name)
+  delete (dependencyInfo.rootPackage.version)
   delete (dependencyInfo.parent.path)
   delete (dependencyInfo.scarf.path)
   if (dependencyInfo.grandparent) {
     delete (dependencyInfo.grandparent.path)
+    delete (dependencyInfo.grandparent.name)
+    delete (dependencyInfo.grandparent.version)
   }
   return dependencyInfo
 }
@@ -434,7 +454,8 @@ module.exports = {
   processDependencyTreeOutput,
   npmExecPath,
   getDependencyInfo,
-  reportPostInstall
+  reportPostInstall,
+  hashWithDefault
 }
 
 if (require.main === module) {
