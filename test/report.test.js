@@ -55,10 +55,15 @@ describe('Reporting tests', () => {
     expect(redacted.rootPackage.path).toBeUndefined()
     expect(redacted.rootPackage.packageJsonPath).toBeUndefined()
 
-    expect(redacted.grandparent.name).toBe(report.hashWithDefault(grandparentName, 'Fail: used hash fallback for name'))
-    expect(redacted.grandparent.version).toBe(report.hashWithDefault(grandparentVersion, 'Fail: used hash fallback for version'))
-    expect(redacted.rootPackage.name).toBe(report.hashWithDefault(rootPackageName, 'Fail: used hash fallback for name'))
-    expect(redacted.rootPackage.version).toBe(report.hashWithDefault(rootPackageVersion, 'Fail: used hash fallback for version'))
+    expect(redacted.grandparent.nameHash).toBe(report.hashWithDefault(grandparentName, 'Fail: used hash fallback for name'))
+    expect(redacted.grandparent.versionHash).toBe(report.hashWithDefault(grandparentVersion, 'Fail: used hash fallback for version'))
+    expect(redacted.rootPackage.nameHash).toBe(report.hashWithDefault(rootPackageName, 'Fail: used hash fallback for name'))
+    expect(redacted.rootPackage.versionHash).toBe(report.hashWithDefault(rootPackageVersion, 'Fail: used hash fallback for version'))
+
+    expect(redacted.grandparent.name).toBeUndefined()
+    expect(redacted.grandparent.version).toBeUndefined()
+    expect(redacted.rootPackage.name).toBeUndefined()
+    expect(redacted.rootPackage.version).toBeUndefined()
 
     expect(redacted.scarf.name).toBe('@scarf/scarf')
     expect(redacted.scarf.version).toBe('0.0.1')
