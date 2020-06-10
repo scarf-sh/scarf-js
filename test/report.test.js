@@ -35,13 +35,15 @@ describe('Reporting tests', () => {
   })
 
   test('Redact sensitive data', () => {
-    const rootPackageName = '@org/scarfed-lib-consumer'
+    const rootPackageName = '@org/scarfed-lib-consumer-consumer'
     const rootPackageVersion = '1.0.0'
+    const grandparentName = 'scarfed-lib-consumer'
+    const grandparentVersion = '1.0.1'
 
     const depInfo = {
       scarf: { name: '@scarf/scarf', version: '0.0.1', path: '/local/directory/deeper/deeper' },
       parent: { name: 'scarfed-library', version: '1.0.0', scarfSettings: { defaultOptIn: true }, path: '/local/directory/deeper/' },
-      grandparent: { name: rootPackageName, version: rootPackageVersion, path: '/local/directory/' },
+      grandparent: { name: grandparentName, version: grandparentVersion, path: '/local/directory/' },
       rootPackage: { name: rootPackageName, version: rootPackageVersion, packageJsonPath: '/local/directory', path: '/local/directory' }
     }
 
@@ -53,13 +55,15 @@ describe('Reporting tests', () => {
     expect(redacted.rootPackage.path).toBeUndefined()
     expect(redacted.rootPackage.packageJsonPath).toBeUndefined()
 
-    expect(redacted.rootPackage.name).not.toContain('org')
-    expect(redacted.rootPackage.name).not.toContain('scarfed-lib-consumer')
-    expect(redacted.grandparent.name).not.toContain('org')
-    expect(redacted.grandparent.name).not.toContain('scarfed-lib-consumer')
+    expect(redacted.grandparent.nameHash).toBe(report.hashWithDefault(grandparentName, 'Fail: used hash fallback for name'))
+    expect(redacted.grandparent.versionHash).toBe(report.hashWithDefault(grandparentVersion, 'Fail: used hash fallback for version'))
+    expect(redacted.rootPackage.nameHash).toBe(report.hashWithDefault(rootPackageName, 'Fail: used hash fallback for name'))
+    expect(redacted.rootPackage.versionHash).toBe(report.hashWithDefault(rootPackageVersion, 'Fail: used hash fallback for version'))
 
-    expect(redacted.rootPackage.version).toBe('0')
-    expect(redacted.grandparent.version).toBe('0')
+    expect(redacted.grandparent.name).toBeUndefined()
+    expect(redacted.grandparent.version).toBeUndefined()
+    expect(redacted.rootPackage.name).toBeUndefined()
+    expect(redacted.rootPackage.version).toBeUndefined()
 
     expect(redacted.scarf.name).toBe('@scarf/scarf')
     expect(redacted.scarf.version).toBe('0.0.1')
