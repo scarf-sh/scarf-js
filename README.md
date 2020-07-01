@@ -58,29 +58,38 @@ to opt in.
 Regardless of the default state, Scarf will log what it is doing to users who
 haven't explictly opted in or out.
 
-### What information does Scarf provide me as a package author?
+### FAQ
+
+#### What information does scarf-js provide me as a package author?
 
 - Understanding your user-base
   - Which companies are using your package?
   - Is your project growing or shrinking? Where? On which platforms?
 - Which versions of your package are being used?
 
-### As a user of a package using Scarf, what information does Scarf send about me?
+#### As a user of a package using scarf-js, what information does scarf-js send about me?
+
+*Scarf does not store personally identifying information.* Scarf aims to collect information that is helpful for:
+- Package maintainence 
+- Identifying which companies are using a particular package, in order to set up support agreements between developers and companies. 
+
+Specifically, scarf-js sends:
 
 - The operating system you are using
-- Your IP address will be used to look up any available company information. The
-  IP address itself will be subsequently deleted.
+- Your IP address will be used to look up any available company information. _Scarf does not store the actual IP address_
 - Limited dependency tree information. Scarf sends the name and version of the package(s) that directly depend on scarf-js. Additionally, scarf-js will send SHA256-hashed name and version for the following packages in the dependency tree:
   - Packages that depend on a package that depends on scarf-js.
   - The root package of the dependency tree.
 This allows Scarf to provide maintainers information about which public packages are using their own, without exposing identifying details of non-public packages.
-  
-  
-### As a user of a package using Scarf, how can I opt out of analytics?
+
+You can have scarf-js print the exact JSON payload it sends by settings `SCARF_VERBOSE=true` in your environment.
+
+#### As a user of a package using scarf-js, how can I opt out of analytics?
 
 Scarf's analytics help support developers of the open source packages you are
 using, so enabling analytics is appreciated. However, if you'd like to opt out,
 you can add your preference to your project's `package.json`:
+
 
 ```json5
 // your-package/package.json
@@ -101,6 +110,25 @@ export SCARF_ANALYTICS=false
 ```
 
 Either route will disable Scarf for all packages.
+
+#### I distribute a package on npm, and scarf-js is in our dependency tree. Can I disable the analytics for my downstream dependents?
+
+Yes. By opting out of analytics via `package.json`, any package upstream will have analytics disbabled.
+
+```json5
+// your-package/package.json
+
+{
+  // ...
+  "scarfSettings": {
+    "enabled": false
+  }
+  // ...
+}
+```
+
+Installers of your packages will have scarf-js disabled for all dependencies upstream from yours.
+  
 
 ### Developing
 
