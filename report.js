@@ -166,7 +166,7 @@ function processDependencyTreeOutput (resolve, reject) {
 
 async function getDependencyInfo () {
   return new Promise((resolve, reject) => {
-    exec(`cd ${rootPath} && npm ls @scarf/scarf --json --long`, { timeout: execTimeout }, processDependencyTreeOutput(resolve, reject))
+    exec(`cd ${rootPath} && npm ls @scarf/scarf --json --long`, { timeout: execTimeout, maxBuffer: 1024 * 1024 * 1024 }, processDependencyTreeOutput(resolve, reject))
   })
 }
 
