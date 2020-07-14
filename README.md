@@ -58,6 +58,20 @@ to opt in.
 Regardless of the default state, Scarf will log what it is doing to users who
 haven't explictly opted in or out.
 
+By default, scarf-js will only trigger analytics when your package is installed as a dependency of another package, or is being installed globally. This ensures that scarf-js analytics will not be triggered on `npm install` being run _within your project_. To change this, you can add:
+
+```json5
+// your-package/package.json
+
+{
+  // ...
+  "scarfSettings": {
+    "allowTopLevel": true
+  }
+  // ...
+}
+```
+
 ### FAQ
 
 #### What information does scarf-js provide me as a package author?
