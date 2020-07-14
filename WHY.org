@@ -109,3 +109,6 @@ If you're interested in adding Scarf to your npm package or learning more:
 - Scarf homepage: [[https://scarf.sh]]
 - GitHub: [[https://github.com/scarf-sh/scarf-js][https://github.com/scarf-sh/scarf-js]]
 - npm: [[https://www.npmjs.com/package/@scarf/scarf][https://www.npmjs.com/package/@scarf/scarf]]
+
+UPDATE: a more recent post which expands on some of these ideas: [[https://about.scarf.sh/post/analytics-and-open-source-sustainability]]
+
