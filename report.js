@@ -67,16 +67,16 @@ function allowTopLevel (rootPackage) {
   return rootPackage && rootPackage.scarfSettings && rootPackage.scarfSettings.allowTopLevel
 }
 
-function parentIsRoot(dependencyToReport) {
+function parentIsRoot (dependencyToReport) {
   return dependencyToReport.parent.name === dependencyToReport.rootPackage.name &&
     dependencyToReport.parent.version === dependencyToReport.rootPackage.version
 }
 
-function isTopLevel(dependencyToReport) {
+function isTopLevel (dependencyToReport) {
   return parentIsRoot(dependencyToReport) && !process.env.npm_config_global
 }
 
-function isGlobal(dependencyToReport) {
+function isGlobal (dependencyToReport) {
   return parentIsRoot(dependencyToReport) && !!process.env.npm_config_global
 }
 
@@ -141,9 +141,9 @@ function processDependencyTreeOutput (resolve, reject) {
     try {
       const output = JSON.parse(stdout)
 
-      let depsToScarf = findScarfInFullDependencyTree(output).filter(depChain => depChain.length >= 2)
+      const depsToScarf = findScarfInFullDependencyTree(output).filter(depChain => depChain.length >= 2)
       if (!depsToScarf.length) {
-        return reject(new Error(`No Scarf parent package found`))
+        return reject(new Error('No Scarf parent package found'))
       }
       const rootPackageDetails = rootPackageDepInfo(output)
 
