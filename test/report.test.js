@@ -121,6 +121,32 @@ describe('Reporting tests', () => {
       expect(err.message).toContain('yarn')
     }
   })
+
+  test('Configurable for top level installs, and enabled for global installs', async () => {
+    const parsedLsOutput = dependencyTreeTopLevelInstall()
+
+    await expect(new Promise((resolve, reject) => {
+      return report.processDependencyTreeOutput(resolve, reject)(null, JSON.stringify(parsedLsOutput), null)
+    })).rejects.toEqual(new Error('The package depending on Scarf is the root package being installed, but Scarf is not configured to run in this case. To enable it, set `scarfSettings.allowTopLevel = true` in your package.json'))
+
+    process.env.npm_config_global = true
+
+    await expect(new Promise((resolve, reject) => {
+      return report.processDependencyTreeOutput(resolve, reject)(null, JSON.stringify(parsedLsOutput), null)
+    })).toBeTruthy()
+
+    process.env.npm_config_global = ''
+    parsedLsOutput.scarfSettings = { allowTopLevel: true }
+
+    await expect(new Promise((resolve, reject) => {
+      return report.processDependencyTreeOutput(resolve, reject)(null, JSON.stringify(parsedLsOutput), null)
+    })).toBeTruthy()
+
+    parsedLsOutput.scarfSettings = { allowTopLevel: false }
+    await expect(new Promise((resolve, reject) => {
+      return report.processDependencyTreeOutput(resolve, reject)(null, JSON.stringify(parsedLsOutput), null)
+    })).rejects.toEqual(new Error('The package depending on Scarf is the root package being installed, but Scarf is not configured to run in this case. To enable it, set `scarfSettings.allowTopLevel = true` in your package.json'))
+  })
 })
 
 function dependencyTreeScarfEnabled () {
@@ -129,5 +155,11 @@ function dependencyTreeScarfEnabled () {
   const parsedLsOutput = JSON.parse(exampleLsOutput)
   delete (parsedLsOutput.dependencies['scarfed-lib-consumer'].scarfSettings)
 
+  return parsedLsOutput
+}
+
+function dependencyTreeTopLevelInstall () {
+  const exampleLsOutput = fs.readFileSync('./test/top-level-package-ls-output.json')
+  const parsedLsOutput = JSON.parse(exampleLsOutput)
   return parsedLsOutput
 }

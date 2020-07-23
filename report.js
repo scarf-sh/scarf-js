@@ -29,6 +29,7 @@ function npmExecPath () {
 }
 
 const userMessageThrottleTime = 1000 * 60 // 1 minute
+
 const execTimeout = 3000
 
 // In general, these keys should never change to remain backwards compatible
@@ -57,6 +58,26 @@ const userHasOptedOut = (rootPackage) => {
 
 const userHasOptedIn = (rootPackage) => {
   return (rootPackage && rootPackage.scarfSettings && rootPackage.scarfSettings.enabled) || process.env.SCARF_ANALYTICS === 'true'
+}
+
+// Packages that depend on Scarf can configure whether to should fire when
+// `npm install` is being run directly from within the package, rather than from a
+// dependent package
+function allowTopLevel (rootPackage) {
+  return rootPackage && rootPackage.scarfSettings && rootPackage.scarfSettings.allowTopLevel
+}
+
+function parentIsRoot (dependencyToReport) {
+  return dependencyToReport.parent.name === dependencyToReport.rootPackage.name &&
+    dependencyToReport.parent.version === dependencyToReport.rootPackage.version
+}
+
+function isTopLevel (dependencyToReport) {
+  return parentIsRoot(dependencyToReport) && !process.env.npm_config_global
+}
+
+function isGlobal (dependencyToReport) {
+  return parentIsRoot(dependencyToReport) && !!process.env.npm_config_global
 }
 
 function hashWithDefault (toHash, defaultReturn) {
@@ -120,12 +141,10 @@ function processDependencyTreeOutput (resolve, reject) {
     try {
       const output = JSON.parse(stdout)
 
-      let depsToScarf = findScarfInFullDependencyTree(output)
-      depsToScarf = depsToScarf.filter(depChain => depChain.length > 2)
-      if (depsToScarf.length === 0) {
+      const depsToScarf = findScarfInFullDependencyTree(output).filter(depChain => depChain.length >= 2)
+      if (!depsToScarf.length) {
         return reject(new Error('No Scarf parent package found'))
       }
-
       const rootPackageDetails = rootPackageDepInfo(output)
 
       const dependencyInfo = depsToScarf.map(depChain => {
@@ -145,7 +164,7 @@ function processDependencyTreeOutput (resolve, reject) {
       })
 
       // Here, we find the dependency chain that corresponds to the scarf package we're currently in
-      const dependencyToReport = dependencyInfo.find(dep => (dep.scarf.path === module.exports.dirName()))
+      const dependencyToReport = dependencyInfo.find(dep => (dep.scarf.path === module.exports.dirName())) || dependencyInfo[0]
       if (!dependencyToReport) {
         return reject(new Error(`Couldn't find dependency info for path ${module.exports.dirName()}`))
       }
@@ -154,6 +173,10 @@ function processDependencyTreeOutput (resolve, reject) {
       // has disabled Scarf, we must respect that setting unless the user overrides it.
       if (dependencyToReport.anyInChainDisabled && !userHasOptedIn(dependencyToReport.rootPackage)) {
         return reject(new Error('Scarf has been disabled via a package.json in the dependency chain.'))
+      }
+
+      if (isTopLevel(dependencyToReport) && !isGlobal(dependencyToReport) && !allowTopLevel(rootPackageDetails)) {
+        return reject(new Error('The package depending on Scarf is the root package being installed, but Scarf is not configured to run in this case. To enable it, set `scarfSettings.allowTopLevel = true` in your package.json'))
       }
 
       return resolve(dependencyToReport)
@@ -175,7 +198,7 @@ async function reportPostInstall () {
 
   const dependencyInfo = await module.exports.getDependencyInfo()
   if (!dependencyInfo.parent || !dependencyInfo.parent.name) {
-    return Promise.reject(new Error('No parent, nothing to report'))
+    return Promise.reject(new Error('No parent found, nothing to report'))
   }
 
   const rootPackage = dependencyInfo.rootPackage
@@ -388,6 +411,9 @@ function packageDetailsFromDepInfo (tree) {
 }
 
 function rootPackageDepInfo (packageInfo) {
+  if (process.env.npm_config_global) {
+    packageInfo = Object.values(packageInfo.dependencies)[0]
+  }
   const info = packageDetailsFromDepInfo(packageInfo)
   info.packageJsonPath = `${packageInfo.path}/package.json`
   return info
@@ -455,7 +481,8 @@ module.exports = {
   npmExecPath,
   getDependencyInfo,
   reportPostInstall,
-  hashWithDefault
+  hashWithDefault,
+  findScarfInFullDependencyTree
 }
 
 if (require.main === module) {
