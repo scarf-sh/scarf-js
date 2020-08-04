@@ -1,1 +1,4 @@
+.envrc
+/*.nix
+/result*
 node_modules
