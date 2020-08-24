@@ -37,7 +37,7 @@ Head to your package's dashboard on Scarf to see your reports when available.
 #### Configuration
 
 Users of your package will be opted in by default and can opt out by setting the
-`SCARF_ANALYTICS=false` environment variable. If you'd Scarf analytics to
+`SCARF_ANALYTICS=false` environment variable. If you'd like Scarf analytics to
 instead be opt-in, you can set this by adding an entry to your `package.json`
 
 
