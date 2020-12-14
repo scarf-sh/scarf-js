@@ -85,8 +85,8 @@ By default, scarf-js will only trigger analytics when your package is installed 
 #### As a user of a package using scarf-js, what information does scarf-js send about me?
 
 *Scarf does not store personally identifying information.* Scarf aims to collect information that is helpful for:
-- Package maintainence 
-- Identifying which companies are using a particular package, in order to set up support agreements between developers and companies. 
+- Package maintainence
+- Identifying which companies are using a particular package, in order to set up support agreements between developers and companies.
 
 Specifically, scarf-js sends:
 
@@ -143,7 +143,7 @@ Yes. By opting out of analytics via `package.json`, any package upstream will ha
 ```
 
 Installers of your packages will have scarf-js disabled for all dependencies upstream from yours.
-  
+
 
 ### Developing
 
