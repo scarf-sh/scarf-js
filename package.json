@@ -1,6 +1,6 @@
 {
   "name": "@scarf/scarf",
-  "version": "0.1.7",
+  "version": "1.1.0",
   "description": "Scarf is like Google Analytics for your npm packages. Gain insights into how your packages are installed and used, and by which companies.",
   "main": "report.js",
   "homepage": "https://github.com/scarf-sh/scarf-js",
@@ -10,14 +10,14 @@
   },
   "files": [
     "report.js",
-    "test/*.js"
+    "test/*"
   ],
   "scripts": {
     "postinstall": "node ./report.js",
     "test": "jest"
   },
   "author": "Scarf Systems",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "devDependencies": {
     "jest": "^25.3.0",
     "minimist": "^1.2.2",
