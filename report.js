@@ -29,7 +29,6 @@ function npmExecPath () {
 }
 
 const userMessageThrottleTime = 1000 * 60 // 1 minute
-const execTimeout = 3000
 
 const execTimeout = 3000
 
