@@ -21,7 +21,7 @@ What makes things even harder for these developers is, as Andrew Nesbitt puts it
 in this excellent [[https://www.youtube.com/watch?v=hW4wUpoBHr8][talk]]:
 
 #+BEGIN_QUOTE
-Maintainers are working mostly in the dark 
+Maintainers are working mostly in the dark
 #+END_QUOTE
 
 This is an important point. Package maintainers have little insight into how
@@ -43,7 +43,7 @@ statistics, as do npm and others. Unfortunately, the data they collect is
 still limited, and whether the data is even exposed to package maintainers
 directly varies between package managers.
 
-So what can we, the software development community do about this? 
+So what can we, the software development community do about this?
 
 One thing we could all do would be to convince our employers to support the
 awesome people that build and maintain the OSS they rely on. But you knew that
@@ -106,6 +106,9 @@ is, there's something you can do to make things better for everyone!
 
 If you're interested in adding Scarf to your npm package or learning more:
 
-- Scarf homepage: [[https://scarf.sh/library]]
+- Scarf homepage: [[https://scarf.sh]]
 - GitHub: [[https://github.com/scarf-sh/scarf-js][https://github.com/scarf-sh/scarf-js]]
 - npm: [[https://www.npmjs.com/package/@scarf/scarf][https://www.npmjs.com/package/@scarf/scarf]]
+
+UPDATE: a more recent post which expands on some of these ideas: [[https://about.scarf.sh/post/analytics-and-open-source-sustainability]]
+

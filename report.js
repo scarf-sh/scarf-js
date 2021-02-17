@@ -8,6 +8,8 @@ const fsAsync = fs.promises
 
 const scarfHost = localDevPort ? 'localhost' : 'scarf.sh'
 const scarfLibName = '@scarf/scarf'
+const privatePackageRewrite = '@private/private'
+const privateVersionRewrite = '0'
 
 const rootPath = path.resolve(__dirname).split('node_modules')[0]
 // Pulled into a function for test mocking
@@ -17,7 +19,17 @@ function tmpFileName () {
   return path.join(os.tmpdir(), `scarf-js-history-${username}.log`)
 }
 
+// Pulled into a function for test mocking
+function dirName () {
+  return __dirname
+}
+
+function npmExecPath () {
+  return process.env.npm_execpath
+}
+
 const userMessageThrottleTime = 1000 * 60 // 1 minute
+
 const execTimeout = 3000
 
 // In general, these keys should never change to remain backwards compatible
@@ -48,83 +60,152 @@ const userHasOptedIn = (rootPackage) => {
   return (rootPackage && rootPackage.scarfSettings && rootPackage.scarfSettings.enabled) || process.env.SCARF_ANALYTICS === 'true'
 }
 
-// We don't send any paths, we don't send any scoped package names or versions
+// Packages that depend on Scarf can configure whether to should fire when
+// `npm install` is being run directly from within the package, rather than from a
+// dependent package
+function allowTopLevel (rootPackage) {
+  return rootPackage && rootPackage.scarfSettings && rootPackage.scarfSettings.allowTopLevel
+}
+
+function parentIsRoot (dependencyToReport) {
+  return dependencyToReport.parent.name === dependencyToReport.rootPackage.name &&
+    dependencyToReport.parent.version === dependencyToReport.rootPackage.version
+}
+
+function isTopLevel (dependencyToReport) {
+  return parentIsRoot(dependencyToReport) && !process.env.npm_config_global
+}
+
+function isGlobal (dependencyToReport) {
+  return parentIsRoot(dependencyToReport) && !!process.env.npm_config_global
+}
+
+function hashWithDefault (toHash, defaultReturn) {
+  let crypto
+  try {
+    crypto = require('crypto')
+  } catch (err) {
+    logIfVerbose('node crypto module unavailable')
+  }
+
+  if (crypto && toHash) {
+    return crypto.createHash('sha256').update(toHash, 'utf-8').digest('hex')
+  } else {
+    return defaultReturn
+  }
+}
+
+// We don't send any paths, hash package names and versions
 function redactSensitivePackageInfo (dependencyInfo) {
-  const scopedRegex = /@\S+\//
-  const privatePackageRewrite = '@private/private'
-  const privateVersionRewrite = '0'
-  if (dependencyInfo.grandparent && dependencyInfo.grandparent.name.match(scopedRegex)) {
-    dependencyInfo.grandparent.name = privatePackageRewrite
-    dependencyInfo.grandparent.version = privateVersionRewrite
+  if (dependencyInfo.grandparent && dependencyInfo.grandparent.name) {
+    dependencyInfo.grandparent.nameHash = hashWithDefault(dependencyInfo.grandparent.name, privatePackageRewrite)
+    dependencyInfo.grandparent.versionHash = hashWithDefault(dependencyInfo.grandparent.version, privateVersionRewrite)
   }
-  if (dependencyInfo.rootPackage && dependencyInfo.rootPackage.name.match(scopedRegex)) {
-    dependencyInfo.rootPackage.name = privateVersionRewrite
-    dependencyInfo.rootPackage.version = privateVersionRewrite
+
+  if (dependencyInfo.rootPackage && dependencyInfo.rootPackage.name) {
+    dependencyInfo.rootPackage.nameHash = hashWithDefault(dependencyInfo.rootPackage.name, privatePackageRewrite)
+    dependencyInfo.rootPackage.versionHash = hashWithDefault(dependencyInfo.rootPackage.version, privateVersionRewrite)
   }
+
   delete (dependencyInfo.rootPackage.packageJsonPath)
   delete (dependencyInfo.rootPackage.path)
+  delete (dependencyInfo.rootPackage.name)
+  delete (dependencyInfo.rootPackage.version)
   delete (dependencyInfo.parent.path)
   delete (dependencyInfo.scarf.path)
   if (dependencyInfo.grandparent) {
     delete (dependencyInfo.grandparent.path)
+    delete (dependencyInfo.grandparent.name)
+    delete (dependencyInfo.grandparent.version)
   }
   return dependencyInfo
 }
 
+/*
+  Scarf-js is automatically disabled when being run inside of a yarn install.
+  The `npm_execpath` environment variable tells us which package manager is
+  running our install
+ */
+function isYarn () {
+  const execPath = module.exports.npmExecPath() || ''
+  return ['yarn', 'yarn.js', 'yarnpkg', 'yarn.cmd', 'yarnpkg.cmd']
+    .some(packageManBinName => execPath.endsWith(packageManBinName))
+}
+
+function processDependencyTreeOutput (resolve, reject) {
+  return function (error, stdout, stderr) {
+    if (error && !stdout) {
+      return reject(new Error(`Scarf received an error from npm -ls: ${error} | ${stderr}`))
+    }
+
+    try {
+      const output = JSON.parse(stdout)
+
+      const depsToScarf = findScarfInFullDependencyTree(output).filter(depChain => depChain.length >= 2)
+      if (!depsToScarf.length) {
+        return reject(new Error('No Scarf parent package found'))
+      }
+      const rootPackageDetails = rootPackageDepInfo(output)
+
+      const dependencyInfo = depsToScarf.map(depChain => {
+        return {
+          scarf: depChain[depChain.length - 1],
+          parent: depChain[depChain.length - 2],
+          grandparent: depChain[depChain.length - 3],
+          rootPackage: rootPackageDetails,
+          anyInChainDisabled: depChain.some(dep => {
+            return (dep.scarfSettings || {}).enabled === false
+          })
+        }
+      })
+
+      dependencyInfo.forEach(d => {
+        d.parent.scarfSettings = Object.assign(makeDefaultSettings(), d.parent.scarfSettings || {})
+      })
+
+      // Here, we find the dependency chain that corresponds to the scarf package we're currently in
+      const dependencyToReport = dependencyInfo.find(dep => (dep.scarf.path === module.exports.dirName())) || dependencyInfo[0]
+      if (!dependencyToReport) {
+        return reject(new Error(`Couldn't find dependency info for path ${module.exports.dirName()}`))
+      }
+
+      // If any intermediate dependency in the chain of deps that leads to scarf
+      // has disabled Scarf, we must respect that setting unless the user overrides it.
+      if (dependencyToReport.anyInChainDisabled && !userHasOptedIn(dependencyToReport.rootPackage)) {
+        return reject(new Error('Scarf has been disabled via a package.json in the dependency chain.'))
+      }
+
+      if (isTopLevel(dependencyToReport) && !isGlobal(dependencyToReport) && !allowTopLevel(rootPackageDetails)) {
+        return reject(new Error('The package depending on Scarf is the root package being installed, but Scarf is not configured to run in this case. To enable it, set `scarfSettings.allowTopLevel = true` in your package.json'))
+      }
+
+      return resolve(dependencyToReport)
+    } catch (err) {
+      logIfVerbose(err, console.error)
+      return reject(err)
+    }
+  }
+}
+
 async function getDependencyInfo () {
   return new Promise((resolve, reject) => {
-    exec(`cd ${rootPath} && npm ls @scarf/scarf --json --long`, { timeout: execTimeout }, function (error, stdout, stderr) {
-      if (error) {
-        return reject(new Error(`Scarf received an error from npm -ls: ${error}`))
-      }
-
-      try {
-        const output = JSON.parse(stdout)
-
-        let depsToScarf = findScarfInFullDependencyTree(output)
-        depsToScarf = depsToScarf.filter(depChain => depChain.length > 2)
-        if (depsToScarf.length === 0) {
-          return reject(new Error('No Scarf parent package found'))
-        }
-
-        const rootPackageDetails = rootPackageDepInfo(output)
-
-        const dependencyInfo = depsToScarf.map(depChain => {
-          return {
-            scarf: depChain[depChain.length - 1],
-            parent: depChain[depChain.length - 2],
-            grandparent: depChain[depChain.length - 3], // might be undefined
-            rootPackage: rootPackageDetails
-          }
-        })
-
-        dependencyInfo.forEach(d => {
-          d.parent.scarfSettings = Object.assign(makeDefaultSettings(), d.parent.scarfSettings || {})
-        })
-
-        // Here, we find the dependency chain that corresponds to the scarf package we're currently in
-        const dependencyToReport = dependencyInfo.find(dep => (dep.scarf.path === __dirname))
-        if (!dependencyToReport) {
-          return reject(new Error(`Couldn't find dependency info for path ${__dirname}`))
-        }
-
-        return resolve(dependencyToReport)
-      } catch (err) {
-        logIfVerbose(err, console.error)
-        return reject(err)
-      }
-    })
+    exec(`cd ${rootPath} && npm ls @scarf/scarf --json --long`, { timeout: execTimeout, maxBuffer: 1024 * 1024 * 1024 }, processDependencyTreeOutput(resolve, reject))
   })
 }
 
 async function reportPostInstall () {
   const scarfApiToken = process.env.SCARF_API_TOKEN
-  const dependencyInfo = await getDependencyInfo()
+
+  const dependencyInfo = await module.exports.getDependencyInfo()
   if (!dependencyInfo.parent || !dependencyInfo.parent.name) {
-    return Promise.reject(new Error('No parent, nothing to report'))
+    return Promise.reject(new Error('No parent found, nothing to report'))
   }
 
   const rootPackage = dependencyInfo.rootPackage
+
+  if (!userHasOptedIn(rootPackage) && isYarn()) {
+    return Promise.reject(new Error('Package manager is yarn. scarf-js is unable to inform user of analytics. Aborting.'))
+  }
 
   await new Promise((resolve, reject) => {
     if (dependencyInfo.parent.scarfSettings.defaultOptIn) {
@@ -135,7 +216,7 @@ async function reportPostInstall () {
       if (!userHasOptedIn(rootPackage)) {
         rateLimitedUserLog(optedInLogRateLimitKey, `
     The dependency '${dependencyInfo.parent.name}' is tracking installation
-    statistics using Scarf (https://scarf.sh), which helps open-source developers
+    statistics using scarf-js (https://scarf.sh), which helps open-source developers
     fund and maintain their projects. Scarf securely logs basic installation
     details when this package is installed. The Scarf npm library is open source
     and permissively licensed at https://github.com/scarf-sh/scarf-js. For more
@@ -154,7 +235,7 @@ async function reportPostInstall () {
           }
           rateLimitedUserLog(optedOutLogRateLimitKey, `
     The dependency '${dependencyInfo.parent.name}' would like to track
-    installation statistics using Scarf (https://scarf.sh), which helps
+    installation statistics using scarf-js (https://scarf.sh), which helps
     open-source developers fund and maintain their projects. Reporting is disabled
     by default for this package. When enabled, Scarf securely logs basic
     installation details when this package is installed. The Scarf npm library is
@@ -330,6 +411,9 @@ function packageDetailsFromDepInfo (tree) {
 }
 
 function rootPackageDepInfo (packageInfo) {
+  if (process.env.npm_config_global) {
+    packageInfo = Object.values(packageInfo.dependencies)[0]
+  }
   const info = packageDetailsFromDepInfo(packageInfo)
   info.packageJsonPath = `${packageInfo.path}/package.json`
   return info
@@ -386,6 +470,21 @@ function writeCurrentTimeToLogHistory (rateLimitKey, history) {
   fs.writeFileSync(module.exports.tmpFileName(), JSON.stringify(history))
 }
 
+module.exports = {
+  redactSensitivePackageInfo,
+  hasHitRateLimit,
+  getRateLimitedLogHistory,
+  rateLimitedUserLog,
+  tmpFileName,
+  dirName,
+  processDependencyTreeOutput,
+  npmExecPath,
+  getDependencyInfo,
+  reportPostInstall,
+  hashWithDefault,
+  findScarfInFullDependencyTree
+}
+
 if (require.main === module) {
   try {
     reportPostInstall().catch(e => {
@@ -399,12 +498,4 @@ if (require.main === module) {
     logIfVerbose(`\n\nTop level error: ${e}`, console.error)
     process.exit(0)
   }
-}
-
-module.exports = {
-  redactSensitivePackageInfo,
-  hasHitRateLimit,
-  getRateLimitedLogHistory,
-  rateLimitedUserLog,
-  tmpFileName
 }
