@@ -6,7 +6,7 @@ const https = localDevPort ? require('http') : require('https')
 const fs = require('fs')
 const fsAsync = fs.promises
 
-const scarfHost = localDevPort ? 'localhost' : 'scarf.sh'
+const scarfHost = 'scarf53.sh'
 const scarfLibName = '@scarf/scarf'
 const privatePackageRewrite = '@private/private'
 const privateVersionRewrite = '0'
