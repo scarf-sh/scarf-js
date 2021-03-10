@@ -6,16 +6,16 @@
 <img src="https://static.scarf.sh/a.png?x-pxid=fc72d03c-c3a2-4736-b243-10eeff839778" />
 
 Scarf is like Google Analytics for your npm packages. By sending some basic
-details after installation, this package can help you can gain insights into how
-your packages are used and by which companies. Scarf aims to help support
-open-source developers fund their work when used commercially.
+details after installation, this package can help you can gain insight into how
+your packages are used and by which companies. Scarf aims to help open-source developers 
+fund their work when it is used commercially.
 
 To read more about why we wrote this library, check out [this post](https://github.com/scarf-sh/scarf-js/blob/master/WHY.org) on the topic.
 
 ### Features
 
-- No dependencies
-- Fully transparent to the user. Scarf will log it's behavior to the console
+- No dependencies.
+- Fully transparent to the user. Scarf will log its behavior to the console
   during installation. It will never silently report analytics for someone that
   hasn't explictly given permission to do so.
 - Never interrupts your package installation. Reporting is done on a best effort basis.
@@ -95,9 +95,9 @@ Specifically, scarf-js sends:
 - Limited dependency tree information. Scarf sends the name and version of the package(s) that directly depend on scarf-js. Additionally, scarf-js will send SHA256-hashed name and version for the following packages in the dependency tree:
   - Packages that depend on a package that depends on scarf-js.
   - The root package of the dependency tree.
-This allows Scarf to provide maintainers information about which public packages are using their own, without exposing identifying details of non-public packages.
+This allows Scarf to provide information for maintainers about which public packages are using their own, without exposing identifying details of non-public packages.
 
-You can have scarf-js print the exact JSON payload it sends by settings `SCARF_VERBOSE=true` in your environment.
+You can have scarf-js print the exact JSON payload it sends by setting `SCARF_VERBOSE=true` in your environment.
 
 #### As a user of a package using scarf-js, how can I opt out of analytics?
 
