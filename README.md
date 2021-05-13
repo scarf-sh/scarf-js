@@ -154,3 +154,7 @@ use http://localhost:8080 as the analytics endpoint host.
 
 Future releases of scarf-js will provide a module of utility functions to
 collect usage analytics in addition to the current installation analytics.
+
+### Community
+
+Join the [Scarf-Community workspace](https://join.slack.com/t/scarf-community/shared_invite/zt-ptndha07-Vs88XHYyHnnAOIEw9AZMgg) on Slack and find us in the #scarf-js channel. We'll keep an eye out for your questions and concerns. 
