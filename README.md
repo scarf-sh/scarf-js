@@ -6,7 +6,6 @@
 <img src="https://static.scarf.sh/a.png?x-pxid=fc72d03c-c3a2-4736-b243-10eeff839778" />
 <a href="https://join.slack.com/t/scarf-community/shared_invite/zt-ptndha07-Vs88XHYyHnnAOIEw9AZMgg"><img src="https://img.shields.io/badge/Scarf%20Community%20-Slack-blue" alt="Join the Scarf Community Slack" />
   </a>
-</p>
 
 Scarf is like Google Analytics for your npm packages. By sending some basic
 details after installation, this package can help you can gain insight into how
