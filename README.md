@@ -4,7 +4,7 @@
 [![npm version](https://badge.fury.io/js/%40scarf%2Fscarf.svg)](https://badge.fury.io/js/%40scarf%2Fscarf)
 <a href="https://www.npmjs.com/package/@scarf/scarf">![](https://img.shields.io/npm/dw/@scarf/scarf)</a>
 <img src="https://static.scarf.sh/a.png?x-pxid=fc72d03c-c3a2-4736-b243-10eeff839778" />
-<a href="https://join.slack.com/t/scarf-community/shared_invite/zt-ptndha07-Vs88XHYyHnnAOIEw9AZMgg"><img src="https://img.shields.io/badge/Scarf%20Community%20-Slack-blue" alt="Join the Scarf Community Slack" />
+<a href="https://tinyurl.com/scarf-community-slack"><img src="https://img.shields.io/badge/Scarf%20Community%20-Slack-blue" alt="Join the Scarf Community Slack" />
   </a>
 
 Scarf is like Google Analytics for your npm packages. By sending some basic
@@ -159,4 +159,4 @@ collect usage analytics in addition to the current installation analytics.
 
 ### Community
 
-Join the [Scarf-Community workspace](https://join.slack.com/t/scarf-community/shared_invite/zt-ptndha07-Vs88XHYyHnnAOIEw9AZMgg) on Slack and find us in the #scarf-js channel. We'll keep an eye out for your questions and concerns. 
+Join the [Scarf-Community workspace](https://tinyurl.com/scarf-community-slack) on Slack and find us in the #scarf-js channel. We'll keep an eye out for your questions and concerns. 
