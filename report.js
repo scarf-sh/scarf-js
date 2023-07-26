@@ -11,7 +11,8 @@ const scarfLibName = '@scarf/scarf'
 const privatePackageRewrite = '@private/private'
 const privateVersionRewrite = '0'
 
-const rootPath = path.resolve(__dirname).split('node_modules')[0]
+const rootPath = process.env.INIT_CWD
+// const rootPath = path.resolve(__dirname).split('node_modules')[0]
 // Pulled into a function for test mocking
 function tmpFileName () {
   // throttle per user
@@ -65,6 +66,10 @@ const userHasOptedIn = (rootPackage) => {
 // dependent package
 function allowTopLevel (rootPackage) {
   return rootPackage && rootPackage.scarfSettings && rootPackage.scarfSettings.allowTopLevel
+}
+
+function skipTraversal(rootPackageName) {
+  return rootPackage && rootPackage.scarfSettings && rootPackage.scarfSettings.skipTraversal
 }
 
 function parentIsRoot (dependencyToReport) {
@@ -188,6 +193,20 @@ function processDependencyTreeOutput (resolve, reject) {
 }
 
 async function getDependencyInfo () {
+
+  try {
+    const rootPackageJSON = require(path.join(rootPath, 'package.json'))
+
+    if (rootPackageJSON && rootPackageJSON.scarfSettings && rootPackageJSON.scarfSettings.skipTraversal) {
+      return {
+        scarf: {name: '@scarf/scarf', version: 'TODO'},
+        parent: { name: rootPackageJSON.name, version: rootPackageJSON.version },
+        rootPackage: { name: rootPackageJSON.name, version: rootPackageJSON.version },
+        anyInChainDisabled: false
+      }
+    }
+  } catch {}
+
   return new Promise((resolve, reject) => {
     exec(`cd ${rootPath} && npm ls @scarf/scarf --json --long`, { timeout: execTimeout, maxBuffer: 1024 * 1024 * 1024 }, processDependencyTreeOutput(resolve, reject))
   })
