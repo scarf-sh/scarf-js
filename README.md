@@ -36,7 +36,7 @@ collect stats on install, no additional code is required!
 
 Head to your package's dashboard on Scarf to see your reports when available.
 
-#### Configuration
+### Configuring
 
 Users of your package will be opted in by default and can opt out by setting the
 `SCARF_ANALYTICS=false` environment variable. If you'd like Scarf analytics to
@@ -76,7 +76,7 @@ By default, scarf-js will only trigger analytics when your package is installed 
 ```
 
 
-*Full Configuration Example*
+#### Full Configuration Example
 
 ```json5
 // your-package/package.json
