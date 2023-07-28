@@ -75,6 +75,28 @@ By default, scarf-js will only trigger analytics when your package is installed 
 }
 ```
 
+
+*Full Configuration Example*
+
+```json5
+// your-package/package.json
+
+{
+  // ...
+  "scarfSettings": {
+    // Toggles whether Scarf is enabled for this package
+    "enabled": true,
+    // Enables Scarf when users run npm install directly in your repository
+    "allowTopLevel": true,
+    // Users will be opted into analytics by default
+    "defaultOptIn": true,
+    // By default, Scarf searches for its own location in your build's dependency graph to ensure reporting can be done for all packages that depend on it. For large projects with lots of dependencies, generating the dependency graph takes more time than Scarf allots for its entire process, so Scarf will always time out. `skipTraversal` is an optional flag for large applications to skip that traversal entirely. Use this flag with caution and care, as it will break Scarf analytics for all other packages you depend on in your build.
+    "skipTraversal": false
+  }
+  // ...
+}
+```
+
 ### FAQ
 
 #### What information does scarf-js provide me as a package author?
