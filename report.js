@@ -12,8 +12,7 @@ const scarfLibName = '@scarf/scarf'
 const privatePackageRewrite = '@private/private'
 const privateVersionRewrite = '0'
 
-const rootPath = process.env.INIT_CWD
-// const rootPath = path.resolve(__dirname).split('node_modules')[0]
+const rootPath = path.resolve(__dirname).split('node_modules')[0]
 // Pulled into a function for test mocking
 function tmpFileName () {
   // throttle per user
