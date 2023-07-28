@@ -192,9 +192,11 @@ function processDependencyTreeOutput (resolve, reject) {
   }
 }
 
-async function getDependencyInfo () {
+// packageJSONOverride: a test convenience to set a packageJSON explicitly.
+// Leave empty to use the actual root package.json.
+async function getDependencyInfo (packageJSONOverride) {
   try {
-    const rootPackageJSON = require(path.join(rootPath, 'package.json'))
+    const rootPackageJSON = require(packageJSONOverride || path.join(rootPath, 'package.json'))
     const scarfPackageJSON = require(path.join(dirName(), 'package.json'))
 
     if (skipTraversal(rootPackageJSON)) {
@@ -203,7 +205,8 @@ async function getDependencyInfo () {
         scarf: { name: '@scarf/scarf', version: scarfPackageJSON.version },
         parent: { name: rootPackageJSON.name, version: rootPackageJSON.version },
         rootPackage: { name: rootPackageJSON.name, version: rootPackageJSON.version },
-        anyInChainDisabled: false
+        anyInChainDisabled: false,
+        skippedTraversal: true
       }
       logIfVerbose(util.inspect(shallowDepInfo))
       return shallowDepInfo
