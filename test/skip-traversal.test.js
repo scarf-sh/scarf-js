@@ -5,8 +5,8 @@ describe('Skip Traversal Flag', () => {
     const depInfo = await report.getDependencyInfo('./test/skip-traversal-package.json')
     expect(depInfo.skippedTraversal).toBe(true)
     try {
-      await report.getDependencyInfo ()
-      fail("Should fail after parsing the real dependency tree and not seeing a parent")
+      await report.getDependencyInfo()
+      fail('Should fail after parsing the real dependency tree and not seeing a parent')
     } catch {}
   })
 })

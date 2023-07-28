@@ -30,6 +30,7 @@
       "jest",
       "beforeAll",
       "afterAll",
+      "fail",
       "describe"
     ]
   }
