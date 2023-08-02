@@ -12,7 +12,8 @@ const scarfLibName = '@scarf/scarf'
 const privatePackageRewrite = '@private/private'
 const privateVersionRewrite = '0'
 
-const rootPath = path.resolve(__dirname).split('node_modules')[0]
+const rootPath = process.env.INIT_CWD
+
 // Pulled into a function for test mocking
 function tmpFileName () {
   // throttle per user
@@ -201,10 +202,15 @@ async function getDependencyInfo (packageJSONOverride) {
 
     if (skipTraversal(rootPackageJSON)) {
       logIfVerbose('skipping dependency tree traversal')
+      const rootInfoToReport = {
+        name: rootPackageJSON.name,
+        version: rootPackageJSON.version,
+        scarfSettings: { ...makeDefaultSettings(), ...rootPackageJSON.scarfSettings }
+      }
       const shallowDepInfo = {
         scarf: { name: '@scarf/scarf', version: scarfPackageJSON.version },
-        parent: { name: rootPackageJSON.name, version: rootPackageJSON.version },
-        rootPackage: { name: rootPackageJSON.name, version: rootPackageJSON.version },
+        parent: rootInfoToReport,
+        rootPackage: rootInfoToReport,
         anyInChainDisabled: false,
         skippedTraversal: true
       }
@@ -224,6 +230,7 @@ async function reportPostInstall () {
   const scarfApiToken = process.env.SCARF_API_TOKEN
 
   const dependencyInfo = await module.exports.getDependencyInfo()
+  logIfVerbose(dependencyInfo)
   if (!dependencyInfo.parent || !dependencyInfo.parent.name) {
     return Promise.reject(new Error('No parent found, nothing to report'))
   }
