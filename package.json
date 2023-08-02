@@ -14,7 +14,7 @@
   ],
   "scripts": {
     "postinstall": "node ./report.js",
-    "test": "jest"
+    "test": "jest --verbose"
   },
   "author": "Scarf Systems",
   "license": "Apache-2.0",
@@ -30,6 +30,7 @@
       "jest",
       "beforeAll",
       "afterAll",
+      "fail",
       "describe"
     ]
   }

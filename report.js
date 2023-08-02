@@ -5,6 +5,7 @@ const localDevPort = process.env.SCARF_LOCAL_PORT
 const https = localDevPort ? require('http') : require('https')
 const fs = require('fs')
 const fsAsync = fs.promises
+const util = require('util')
 
 const scarfHost = localDevPort ? 'localhost' : 'scarf.sh'
 const scarfLibName = '@scarf/scarf'
@@ -65,6 +66,10 @@ const userHasOptedIn = (rootPackage) => {
 // dependent package
 function allowTopLevel (rootPackage) {
   return rootPackage && rootPackage.scarfSettings && rootPackage.scarfSettings.allowTopLevel
+}
+
+function skipTraversal (rootPackage) {
+  return rootPackage && rootPackage.scarfSettings && rootPackage.scarfSettings.skipTraversal
 }
 
 function parentIsRoot (dependencyToReport) {
@@ -187,7 +192,29 @@ function processDependencyTreeOutput (resolve, reject) {
   }
 }
 
-async function getDependencyInfo () {
+// packageJSONOverride: a test convenience to set a packageJSON explicitly.
+// Leave empty to use the actual root package.json.
+async function getDependencyInfo (packageJSONOverride) {
+  try {
+    const rootPackageJSON = require(packageJSONOverride || path.join(rootPath, 'package.json'))
+    const scarfPackageJSON = require(path.join(dirName(), 'package.json'))
+
+    if (skipTraversal(rootPackageJSON)) {
+      logIfVerbose('skipping dependency tree traversal')
+      const shallowDepInfo = {
+        scarf: { name: '@scarf/scarf', version: scarfPackageJSON.version },
+        parent: { name: rootPackageJSON.name, version: rootPackageJSON.version },
+        rootPackage: { name: rootPackageJSON.name, version: rootPackageJSON.version },
+        anyInChainDisabled: false,
+        skippedTraversal: true
+      }
+      logIfVerbose(util.inspect(shallowDepInfo))
+      return shallowDepInfo
+    }
+  } catch (err) {
+    logIfVerbose(err, console.error)
+  }
+
   return new Promise((resolve, reject) => {
     exec(`cd ${rootPath} && npm ls @scarf/scarf --json --long`, { timeout: execTimeout, maxBuffer: 1024 * 1024 * 1024 }, processDependencyTreeOutput(resolve, reject))
   })
