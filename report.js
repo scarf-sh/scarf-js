@@ -202,10 +202,11 @@ async function getDependencyInfo (packageJSONOverride) {
 
     if (skipTraversal(rootPackageJSON)) {
       logIfVerbose('skipping dependency tree traversal')
-      const rootInfoToReport = { name: rootPackageJSON.name,
-                                 version: rootPackageJSON.version,
-                                 scarfSettings: Object.assign(makeDefaultSettings(), rootPackageJSON.scarfSettings || {})
-                               }
+      const rootInfoToReport = {
+        name: rootPackageJSON.name,
+        version: rootPackageJSON.version,
+        scarfSettings: { ...makeDefaultSettings(), ...rootPackageJSON.scarfSettings }
+      }
       const shallowDepInfo = {
         scarf: { name: '@scarf/scarf', version: scarfPackageJSON.version },
         parent: rootInfoToReport,
