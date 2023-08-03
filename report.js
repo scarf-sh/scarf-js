@@ -193,6 +193,22 @@ function processDependencyTreeOutput (resolve, reject) {
   }
 }
 
+function processGitRevParseOutput (resolve, reject) {
+  return function (error, stdout, stderr) {
+    if (error && !stdout) {
+      return reject(new Error(`Scarf received an error from git rev-parse: ${error} | ${stderr}`))
+    }
+
+    const output = String(stdout).trim()
+
+    if (output.length > 0) {
+      return resolve(output)
+    } else {
+      return reject(new Error('Scarf did not receive usable output from git rev-parse'))
+    }
+  }
+}
+
 // packageJSONOverride: a test convenience to set a packageJSON explicitly.
 // Leave empty to use the actual root package.json.
 async function getDependencyInfo (packageJSONOverride) {
@@ -226,6 +242,18 @@ async function getDependencyInfo (packageJSONOverride) {
   })
 }
 
+async function getGitSha () {
+  const promise = new Promise((resolve, reject) => {
+    exec(`cd ${rootPath} && git rev-parse HEAD`, { timeout: execTimeout, maxBuffer: 1024 * 1024 * 1024 }, processGitRevParseOutput(resolve, reject))
+  })
+  try {
+    return await promise
+  } catch (e) {
+    logIfVerbose(e)
+    return undefined
+  }
+}
+
 async function reportPostInstall () {
   const scarfApiToken = process.env.SCARF_API_TOKEN
 
@@ -234,6 +262,10 @@ async function reportPostInstall () {
   if (!dependencyInfo.parent || !dependencyInfo.parent.name) {
     return Promise.reject(new Error('No parent found, nothing to report'))
   }
+
+  const gitSha = await getGitSha()
+  logIfVerbose(`Injecting sha to parent: ${gitSha}`)
+  dependencyInfo.parent.gitSha = gitSha
 
   const rootPackage = dependencyInfo.rootPackage
 
@@ -512,8 +544,10 @@ module.exports = {
   tmpFileName,
   dirName,
   processDependencyTreeOutput,
+  processGitRevParseOutput,
   npmExecPath,
   getDependencyInfo,
+  getGitSha,
   reportPostInstall,
   hashWithDefault,
   findScarfInFullDependencyTree
