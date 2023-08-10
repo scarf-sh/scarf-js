@@ -147,6 +147,16 @@ describe('Reporting tests', () => {
       return report.processDependencyTreeOutput(resolve, reject)(null, JSON.stringify(parsedLsOutput), null)
     })).rejects.toEqual(new Error('The package depending on Scarf is the root package being installed, but Scarf is not configured to run in this case. To enable it, set `scarfSettings.allowTopLevel = true` in your package.json'))
   })
+
+  test('Can parse example git rev-parse HEAD output', async () => {
+    await expect(new Promise((resolve, reject) => {
+      return report.processGitRevParseOutput(resolve, reject)(null, '9ace16b9e3833ad4e761a49f17fe607723d5bd5e\n', null)
+    })).resolves.toEqual('9ace16b9e3833ad4e761a49f17fe607723d5bd5e')
+  })
+
+  test('getGitShaFromRootPath resolves in test run of cloned repository', async () => {
+    await expect(report.getGitShaFromRootPath()).resolves.toBeTruthy()
+  })
 })
 
 function dependencyTreeScarfEnabled () {
