@@ -263,9 +263,11 @@ async function reportPostInstall () {
     return Promise.reject(new Error('No parent found, nothing to report'))
   }
 
-  const gitSha = await getGitSha()
-  logIfVerbose(`Injecting sha to parent: ${gitSha}`)
-  dependencyInfo.parent.gitSha = gitSha
+  if (allowTopLevel(dependencyInfo.rootPackage)) {
+    const gitSha = await getGitSha()
+    logIfVerbose(`Injecting sha to parent: ${gitSha}`)
+    dependencyInfo.parent.gitSha = gitSha
+  }
 
   const rootPackage = dependencyInfo.rootPackage
 
