@@ -74,8 +74,8 @@ function skipTraversal (rootPackage) {
 }
 
 function parentIsRoot (dependencyToReport) {
-  return dependencyToReport.parent.name === dependencyToReport.rootPackage.name &&
-    dependencyToReport.parent.version === dependencyToReport.rootPackage.version
+  return dependencyToReport?.parent?.name === dependencyToReport?.rootPackage?.name &&
+    dependencyToReport?.parent?.version === dependencyToReport?.rootPackage?.version
 }
 
 function isTopLevel (dependencyToReport) {
@@ -242,7 +242,7 @@ async function getDependencyInfo (packageJSONOverride) {
   })
 }
 
-async function getGitSha () {
+async function getGitShaFromRootPath () {
   const promise = new Promise((resolve, reject) => {
     exec(`cd ${rootPath} && git rev-parse HEAD`, { timeout: execTimeout, maxBuffer: 1024 * 1024 * 1024 }, processGitRevParseOutput(resolve, reject))
   })
@@ -263,8 +263,8 @@ async function reportPostInstall () {
     return Promise.reject(new Error('No parent found, nothing to report'))
   }
 
-  if (allowTopLevel(dependencyInfo.rootPackage)) {
-    const gitSha = await getGitSha()
+  if (parentIsRoot(dependencyInfo) && skipTraversal(dependencyInfo.rootPackage) && allowTopLevel(dependencyInfo.rootPackage)) {
+    const gitSha = await getGitShaFromRootPath()
     logIfVerbose(`Injecting sha to parent: ${gitSha}`)
     dependencyInfo.parent.gitSha = gitSha
   }
@@ -549,7 +549,7 @@ module.exports = {
   processGitRevParseOutput,
   npmExecPath,
   getDependencyInfo,
-  getGitSha,
+  getGitShaFromRootPath,
   reportPostInstall,
   hashWithDefault,
   findScarfInFullDependencyTree

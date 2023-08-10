@@ -154,8 +154,8 @@ describe('Reporting tests', () => {
     })).resolves.toEqual('9ace16b9e3833ad4e761a49f17fe607723d5bd5e')
   })
 
-  test('getGitSha resolves in test run of cloned repository', async () => {
-    await expect(report.getGitSha()).resolves.toBeTruthy()
+  test('getGitShaFromRootPath resolves in test run of cloned repository', async () => {
+    await expect(report.getGitShaFromRootPath()).resolves.toBeTruthy()
   })
 })
 
