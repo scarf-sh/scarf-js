@@ -74,8 +74,10 @@ function skipTraversal (rootPackage) {
 }
 
 function parentIsRoot (dependencyToReport) {
-  return dependencyToReport?.parent?.name === dependencyToReport?.rootPackage?.name &&
-    dependencyToReport?.parent?.version === dependencyToReport?.rootPackage?.version
+  const parent = dependencyToReport.parent
+  const rootPackage = dependencyToReport.rootPackage
+
+  return parent && rootPackage && parent.name === rootPackage.name && parent.version === rootPackage.version
 }
 
 function isTopLevel (dependencyToReport) {
