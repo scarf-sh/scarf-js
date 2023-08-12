@@ -87,6 +87,8 @@ By default, scarf-js will only trigger analytics when your package is installed 
     // Toggles whether Scarf is enabled for this package
     "enabled": true,
     // Enables Scarf when users run npm install directly in your repository
+    // Scarf will try to report the Git commit SHA of your repository if it can
+    // be obtained.
     "allowTopLevel": true,
     // Users will be opted into analytics by default
     "defaultOptIn": true,
