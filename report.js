@@ -376,6 +376,7 @@ async function reportPostInstall () {
     libraryType: 'npm',
     rawPlatform: os.platform(),
     rawArch: os.arch(),
+    nodeVersion: process.versions.node,
     dependencyInfo: dependencyInfo
   }
 
