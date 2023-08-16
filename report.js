@@ -227,8 +227,8 @@ async function getDependencyInfo (packageJSONOverride) {
       }
       const shallowDepInfo = {
         scarf: { name: '@scarf/scarf', version: scarfPackageJSON.version },
-        parent: rootInfoToReport,
-        rootPackage: rootInfoToReport,
+        parent: { ...rootInfoToReport },
+        rootPackage: { ...rootInfoToReport },
         anyInChainDisabled: false,
         skippedTraversal: true
       }
