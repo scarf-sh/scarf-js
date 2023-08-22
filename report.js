@@ -55,7 +55,7 @@ function logIfVerbose (toLog, stream) {
 // SCARF_NO_ANALYTICS was the original variable, we'll get rid of it eventually
 const userHasOptedOut = (rootPackage) => {
   return (rootPackage && rootPackage.scarfSettings && rootPackage.scarfSettings.enabled === false) ||
-    (process.env.SCARF_ANALYTICS === 'false' || process.env.SCARF_NO_ANALYTICS === 'true')
+    (process.env.SCARF_ANALYTICS === 'false' || process.env.SCARF_NO_ANALYTICS === 'true' || process.env.DO_NOT_TRACK === '1')
 }
 
 const userHasOptedIn = (rootPackage) => {
