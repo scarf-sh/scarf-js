@@ -157,6 +157,11 @@ Alternatively, you can set this variable in your environment:
 export SCARF_ANALYTICS=false
 ```
 
+You can also set this variable in accordance to the [Console Do Not Track](https://consoledonottrack.com/) standard: 
+```shell
+export DO_NOT_TRACK=1
+```
+
 Either route will disable Scarf for all packages.
 
 #### I distribute a package on npm, and scarf-js is in our dependency tree. Can I disable the analytics for my downstream dependents?
