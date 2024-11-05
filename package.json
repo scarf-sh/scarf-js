@@ -9,8 +9,7 @@
     "url": "git+https://github.com/scarf-sh/scarf-js.git"
   },
   "files": [
-    "report.js",
-    "test/*"
+    "report.js"
   ],
   "scripts": {
     "postinstall": "node ./report.js",
