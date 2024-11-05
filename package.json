@@ -9,14 +9,13 @@
     "url": "git+https://github.com/scarf-sh/scarf-js.git"
   },
   "files": [
-    "report.js",
-    "test/*"
+    "report.js"
   ],
   "scripts": {
     "postinstall": "node ./report.js",
     "test": "jest --verbose"
   },
-  "author": "Scarf Systems",
+  "author": "Scarf Systems, Inc.",
   "license": "Apache-2.0",
   "devDependencies": {
     "jest": "^25.3.0",
