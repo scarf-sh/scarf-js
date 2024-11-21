@@ -7,10 +7,9 @@
 <a href="https://tinyurl.com/scarf-community-slack"><img src="https://img.shields.io/badge/Scarf%20Community%20-Slack-blue" alt="Join the Scarf Community Slack" />
   </a>
 
-Scarf is like Google Analytics for your npm packages. By sending some basic
-details after installation, this package can help you can gain insight into how
-your packages are used and by which companies. Scarf aims to help open-source developers 
-fund their work when it is used commercially.
+Scarf.js is analytics for your npm packages. By sending some basic
+details after installation, this package can help you gain insight into how
+your packages are used and by which companies. Scarf aims to help open-source projects improve and grow through data-driven decision-making.
 
 To read more about why we wrote this library, check out [this post](https://github.com/scarf-sh/scarf-js/blob/master/WHY.org) on the topic.
 
