@@ -15,31 +15,28 @@ To read more about why we wrote this library, check out [this post](https://gith
 
 ### Features
 
-- No dependencies.
-- Fully transparent to the user. Scarf will log its behavior to the console
-  during installation. It will never silently report analytics for someone that
-  hasn't explictly given permission to do so.
+- No dependencies, making Scarf.js more transparent, performant, maintainable, and secure. 
+- Fully transparent to the user. Scarf will log the package's behavior in the Scarf Dashboard. It will never silently report analytics for someone that hasn't explictly given permission to do so.
 - Never interrupts your package installation. Reporting is done on a best effort basis.
 
 ### Installing
 
-You'll first need to create a library entry on [Scarf](https://scarf.sh). Once
-created, add a dependency on this library to your own:
+You'll first need to configure your npm package in [Scarf](https://scarf.sh). 
 
 ```bash
 npm i --save @scarf/scarf
 ```
 
-Once your library is published to npm with this change, Scarf will automatically
+Once your npm package is published with Scarf, it will automatically start to 
 collect stats on install, no additional code is required!
 
 Head to your package's dashboard on Scarf to see your reports when available.
 
 ### Configuring
 
-Users of your package will be opted in by default and can opt out by setting the
+By default, users of your package will be opted in and can opt out by setting the
 `SCARF_ANALYTICS=false` environment variable. If you'd like Scarf analytics to
-instead be opt-in, you can set this by adding an entry to your `package.json`
+instead be opt-out by default, you can set this by adding an entry to your `package.json`
 
 
 ```json5
@@ -54,13 +51,12 @@ instead be opt-in, you can set this by adding an entry to your `package.json`
 }
 ```
 
-Scarf will now be opt-out by default, and users can set `SCARF_ANALYTICS=true`
+In constrast, Scarf will now be opt out by default, and users can set `SCARF_ANALYTICS=true`
 to opt in.
 
-Regardless of the default state, Scarf will log what it is doing to users who
-haven't explictly opted in or out.
+Regardless of the default state, Scarf will log what it is doing to users who haven't explictly opted in or out.
 
-By default, scarf-js will only trigger analytics when your package is installed as a dependency of another package, or is being installed globally. This ensures that scarf-js analytics will not be triggered on `npm install` being run _within your project_. To change this, you can add:
+By default, scarf-js will only trigger analytics when your Scarf package is installed as a dependency of another package, or is being installed globally. This ensures that scarf-js analytics will not be triggered on `npm install` being run _within your project_. To change this, you can add:
 
 ```json5
 // your-package/package.json
