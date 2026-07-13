@@ -18,7 +18,7 @@
   "author": "Scarf Systems",
   "license": "Apache-2.0",
   "devDependencies": {
-    "jest": "^25.3.0",
+    "jest": "^30.4.2",
     "minimist": "^1.2.2",
     "standard": "^14.3.1"
   },
